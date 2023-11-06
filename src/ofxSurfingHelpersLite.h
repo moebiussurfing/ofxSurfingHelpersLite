@@ -14,6 +14,25 @@
 #define SURFING__STRING_BOX__DEFAULT_XPAD 20
 #define SURFING__STRING_BOX__DEFAULT_YPAD 20
 #define SURFING__STRING_BOX__DEFAULT_ROUND 5.f // 0.f to not rounded
+//#define SURFING__STRING_BOX___USE_TTF_INSTEAD_OF_BITMAP_FONT___WIP//TODO
+
+//--
+
+// ofxGui
+
+// Default font and sizes/colors will be used for ofxGui!
+
+#define SURFING__OFXGUI__FONT_DEFAULT_SIZE 9
+#define SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI 7
+#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/NotoSansMono-Regular.ttf"
+
+//#define SURFING__OFXGUI__FONT_DEFAULT_SIZE 10
+//#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/Montserrat-Regular.ttf"
+
+//#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/Inter-Regular.ttf"
+//#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMonoNL-ExtraBold.ttf"
+//#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMonoNL-SemiBold.ttf"
+//#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMono-Bold.ttf"
 
 //------
 
@@ -34,7 +53,8 @@ inline bool loadSettings(ofParameterGroup & parameters, string path) {
 	if (b)
 		ofLogNotice("ofxSurfing") << "Found file: " << path;
 	else
-		ofLogError("ofxSurfing") << "File " << path << " not found!";
+		ofLogError("ofxSurfing") << "File " << path
+								 << " for ofParameterGroup " << parameters.getName() << "not found!";
 	//load if exist
 	if (b) {
 		ofJson settings;
@@ -60,7 +80,7 @@ inline bool saveSettings(ofParameterGroup & parameters, string path) {
 	ofSerialize(settings, parameters);
 	bool b = ofSavePrettyJson(path, settings);
 	if (b)
-		ofLogNotice("ofxSurfing") << "Saved: " << parameters.getName() << " to " << path;
+		ofLogNotice("ofxSurfing") << "Saved ofParameterGroup: " << parameters.getName() << " to " << path;
 	else
 		ofLogError("ofxSurfing") << "Error saving: " << parameters.getName() << " to " << path;
 
@@ -149,10 +169,20 @@ inline void setWindowSquared(int sz = 800) {
 /*
 	A text box widget with layout management.
 */
-
 //--------------------------------------------------------------
 inline void ofDrawBitmapStringBox(string s, int x, int y, float round = SURFING__STRING_BOX__DEFAULT_ROUND) {
 	bool bdebug = 0;
+
+#ifdef SURFING__STRING_BOX___USE_TTF_INSTEAD_OF_BITMAP_FONT___WIP
+	static bool bDone = 0;
+	static ofTrueTypeFont font;
+	if (!bDone) {
+		bDone = 1;
+		string path = SURFING__OFXGUI__FONT_DEFAULT_PATH;
+		int sz = SURFING__OFXGUI__FONT_DEFAULT_SIZE;
+		font.loadFont(path, sz);
+	}
+#endif
 
 	int a1 = 255;
 	int a2 = 200;
@@ -193,23 +223,32 @@ inline void ofDrawBitmapStringBox(string s, int x, int y, float round = SURFING_
 		ofPopStyle();
 	}
 
-	if (bdebug) {
-		ofPushStyle();
-		ofNoFill();
-		ofSetLineWidth(2);
-		ofSetColor(ofColor::yellow);
+#if (bdebug)
+	ofPushStyle();
+	ofNoFill();
+	ofSetLineWidth(2);
+	ofSetColor(ofColor::yellow);
 
-		ofDrawRectangle(bb1);
+	ofDrawRectangle(bb1);
 
-		ofSetColor(ofColor::red);
-		ofDrawRectangle(bb2);
+	ofSetColor(ofColor::red);
+	ofDrawRectangle(bb2);
 
-		ofPopStyle();
-	}
+	ofPopStyle();
+#endif
 
 	ofPushStyle();
 	ofSetColor(c1);
+
+#ifdef SURFING__STRING_BOX___USE_TTF_INSTEAD_OF_BITMAP_FONT___WIP
+	if (font.isLoaded())
+		font.drawString(s, x + xoffset, y + yoffset);
+	else
+		ofDrawBitmapString(s, x + xoffset, y + yoffset);
+#else
 	ofDrawBitmapString(s, x + xoffset, y + yoffset);
+#endif
+
 	ofPopStyle();
 }
 
@@ -221,8 +260,27 @@ inline ofRectangle getBBBitmapStringBox(string s, int x = 0, int y = 0) {
 	x += xpad;
 	y += ypad;
 
+	ofRectangle bb;
+
+#ifdef SURFING__STRING_BOX___USE_TTF_INSTEAD_OF_BITMAP_FONT___WIP
+	static bool bDone = 0;
+	static ofTrueTypeFont font;
+	if (!bDone) {
+		bDone = 1;
+		string path = SURFING__OFXGUI__FONT_DEFAULT_PATH;
+		int sz = SURFING__OFXGUI__FONT_DEFAULT_SIZE;
+		font.loadFont(path, sz);
+	}
+	if (font.isLoaded())
+		bb = font.getStringBoundingBox(s, 0, 0);
+	else {
+		ofBitmapFont bf;
+		bb = bf.getBoundingBox(s, 0, 0);
+	}
+#else
 	ofBitmapFont bf;
-	auto bb = bf.getBoundingBox(s, 0, 0);
+	bb = bf.getBoundingBox(s, 0, 0);
+#endif
 
 	ofRectangle bb1;
 	bb1 = { (float)x, (float)y, bb.width, bb.height };
@@ -459,6 +517,24 @@ inline void setGuiPositionToLayout(ofxPanel & gui, int layout = 0) {
 	gui.setPosition(p.x, p.y);
 }
 
+// Set position of gui1 at the window bottom and centered
+// (gui2 must be externally linked to gui1 with the correct padding).
+//TODO: other layouts
+inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, int layout = 1) {
+	if (layout == 0) { //bottom-center
+		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + SURFING__PAD_OFXGUI_BETWEEN_PANELS;
+		int gh = MAX(gui1.getShape().getHeight(), gui2.getShape().getHeight());
+		gh += SURFING__PAD_TO_WINDOW_BORDERS;
+		int x = ofGetWidth() / 2 - gw / 2;
+		int y = ofGetHeight() - gh;
+		gui1.setPosition(x, y);
+	} else if (layout == 1) { //top center
+		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + SURFING__PAD_OFXGUI_BETWEEN_PANELS;
+		int x = ofGetWidth() / 2 - gw / 2;
+		int y = SURFING__PAD_TO_WINDOW_BORDERS;
+		gui1.setPosition(x, y);
+	}
+}
 /*
 
 TODO
@@ -475,11 +551,113 @@ TODO
 		//ofxSurfing::ofDrawBitmapStringBox(sHelp, p.x, p.y);
 */
 
+//--------------------------------------------------------------
+inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
+
+	bool bDebugDefault = 0;
+
+	bool bColors = 1;
+	bool bSizes = 1;
+
+	bool bFont = 1;
+	int size = bMini ? SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI : SURFING__OFXGUI__FONT_DEFAULT_SIZE;
+
+	if (pathFont == "") pathFont = SURFING__OFXGUI__FONT_DEFAULT_PATH;
+
+	if (bFont) {
+		ofFile file(pathFont);
+		bool b = file.exists();
+		if (b) {
+			ofxGuiSetFont(pathFont, size);
+		} else {
+			ofLogError(__FUNCTION__) << "Font file " + pathFont + " not found!";
+			ofLogError(__FUNCTION__) << "Unable to customize the ofxGui theme font.";
+		}
+	}
+
+	if (bColors) {
+		ofColor cHeadBg;
+		ofColor cBg;
+		ofColor cBorder;
+		ofColor cText;
+		ofColor cFill;
+
+#if bDebugDefault
+		//Default
+		/*
+		ofxBaseGui::headerBackgroundColor(80),
+		ofxBaseGui::backgroundColor(0),
+		ofxBaseGui::borderColor(120, 100),
+		ofxBaseGui::textColor(255),
+		ofxBaseGui::fillColor(128);
+		*/
+		cHeadBg = ofColor(80);
+		cBg = ofColor(0);
+		cBorder = ofColor(120, 100);
+		cText = ofColor(255);
+		cFill = ofColor(128);
+#else
+	//TODO
+	#if 0
+		//Default
+		cHeadBg = ofColor(80);
+		cBg = ofColor(0);
+		cBorder = ofColor(120, 100);
+		cText = ofColor(255);
+		cFill = ofColor(128);
+	#else
+		cHeadBg = ofColor(80);
+		cBg = ofColor(50, 210);
+		cBorder = ofColor(120, 100);
+		cText = ofColor(255);
+		cFill = ofColor(120, 210);
+	#endif
+#endif
+		ofxGuiSetHeaderColor(cHeadBg);
+		ofxGuiSetBackgroundColor(cBg);
+		ofxGuiSetBorderColor(cBorder);
+		ofxGuiSetFillColor(cFill);
+		ofxGuiSetTextColor(cText);
+	}
+
+	if (bSizes) {
+		int textPadding;
+		int defaultWidth;
+		int defaultHeight;
+
+#if bDebugDefault
+		//Default
+		/*
+		int ofxBaseGui::textPadding = 4;
+		int ofxBaseGui::defaultWidth = 200;
+		int ofxBaseGui::defaultHeight = 18;
+		*/
+		textPadding = 4;
+		defaultWidth = 200;
+		defaultHeight = 18;
+#else
+		if (bMini) {
+			textPadding = 6;
+			defaultWidth = 135;
+			defaultHeight = 15;
+		} else {
+			textPadding = 6;
+			defaultWidth = 200;
+			defaultHeight = 18;
+		}
+#endif
+		ofxGuiSetTextPadding(textPadding);
+		ofxGuiSetDefaultWidth(defaultWidth);
+		ofxGuiSetDefaultHeight(defaultHeight);
+	}
+}
 };
 
 //------
 
 /*
+* SurfingAutoSaver
+* 
 	A class to auto save an ofParameterGroup.
 	settings are saved one second 
 	after any change to avoid overflow o file savings.
@@ -525,10 +703,25 @@ public:
 		if (b) {
 			// flag to save delayed
 			if (bEnable) {
+				//only log once/first call
+				if (!bFlagSave) ofLogVerbose("SurfingAutoSaver") << "saveSoon() " << name;
+
 				bFlagSave = true;
 				timeLastChange = ofGetElapsedTimeMillis();
 			}
 		}
+	}
+
+	const string getName() {
+		return name;
+	}
+
+	/// <summary>
+	/// not mandatory but for debug
+	/// </summary>
+	/// <param name="n"></param>
+	void setName(string n) {
+		name = n;
 	}
 
 	void pause() {
@@ -554,6 +747,7 @@ private:
 	bool bFlagSave = false;
 
 	bool bAutoSave_ = false;
+	string name = "";
 
 private:
 	callback_t f_Saver = nullptr;
@@ -569,6 +763,9 @@ private:
 	}
 
 public:
+	/// <summary>
+	///  Warning. Should be private! Expected to be called automaticaly as a listener to ofEvents().update() is registered..
+	/// </summary>
 	void update() {
 		if (bEnable) {
 			auto t = ofGetElapsedTimeMillis() - timeLastChange;
@@ -583,6 +780,8 @@ public:
 public:
 	void save() {
 		if (f_Saver != nullptr) f_Saver();
+
+		ofLogVerbose("SurfingAutoSaver") << "Save() " << name;
 	}
 };
 
