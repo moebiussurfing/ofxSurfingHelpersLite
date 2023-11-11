@@ -105,10 +105,10 @@ inline void checkFolderOrCreate(string path) {
 // LEGACY
 // for ofxSurfingHelpers
 inline bool loadGroup(ofParameterGroup & parameters, string path) {
-	loadSettings(parameters, path);
+	return loadSettings(parameters, path);
 }
 inline bool saveGroup(ofParameterGroup & parameters, string path) {
-	loadSettings(parameters, path);
+	return saveSettings(parameters, path);
 }
 
 //------
@@ -200,12 +200,13 @@ inline string setWindowShapeForInstagram(size_t i = 0, bool bForcePos = false) {
 	* Image type sizes
 	* Dimensions in pixels
 	*/
+
 	vector<string> names = {
-		"IGTV Cover Photo: \n420x654 | 1:1.55",
-		"IG Landscape Photo: \n1080x566 | 1.91:1",
-		"IG Portrait: \n1080x1350 | 4:5",
-		"IG Story: \n1080x1920 | 9:16",
-		"IG Square: \n1080x1080 | 1:1",
+		"IGTV Cover Photo: \n420x654 1:1.55",
+		"IG Landscape Photo: \n1080x566 1.91:1",
+		"IG Portrait: \n1080x1350 4:5",
+		"IG Story: \n1080x1920 9:16",
+		"IG Square: \n1080x1080 1:1",
 	};
 
 	i = ofClamp(i, 0, names.size() - 1);
@@ -222,8 +223,6 @@ inline string setWindowShapeForInstagram(size_t i = 0, bool bForcePos = false) {
 
 	return names[i];
 
-
-	
 	//// TODO:
 	//// allow resize on runtime
 	//// set instagram size
@@ -715,8 +714,7 @@ inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, int lay
 /*
 
 TODO
-
-		//TODO: put bb above gui panel
+		// put bb above gui panel
 		// not sure if there is some bug on OF getBoundingBox..
 		//auto bbG = gui.getShape();
 		//auto bbH = ofxSurfing::getBBBitmapStringBox(sHelp);
@@ -1019,6 +1017,37 @@ inline std::string calculateTime(float _time) {
 		return "00:00";
 	else
 		return (mins + ":" + secs);
+}
+
+//------
+
+/*
+* Push/Pop ArbTex state
+*/
+
+//--------------------------------------------------------------
+inline bool pushSetArbTex(bool bEnable) {
+	bool b = ofGetUsingArbTex(); //return pre state
+
+	if (bEnable) {
+		if (!ofGetUsingArbTex())
+			ofEnableArbTex();
+	} else {
+		if (ofGetUsingArbTex())
+			ofDisableArbTex();
+	}
+
+	return b;
+}
+//--------------------------------------------------------------
+inline void popSetArbTex(bool bPrePush) {
+
+	if (bPrePush != ofGetUsingArbTex()) {
+		if (bPrePush)
+			ofEnableArbTex();
+		else
+			ofDisableArbTex();
+	}
 }
 
 }
