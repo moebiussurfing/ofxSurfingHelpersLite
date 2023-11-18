@@ -50,7 +50,9 @@ namespace ofxSurfing {
 
 // Load
 //--------------------------------------------------------------
-inline bool loadSettings(ofParameterGroup & parameters, string path) {
+inline bool loadSettings(ofParameterGroup & parameters, string path = "") {
+	if (path == "") path = parameters.getName();
+
 	//verify that the file exist
 	ofFile f;
 	bool b = f.doesFileExist(path);
@@ -71,7 +73,9 @@ inline bool loadSettings(ofParameterGroup & parameters, string path) {
 
 // Save
 //--------------------------------------------------------------
-inline bool saveSettings(ofParameterGroup & parameters, string path) {
+inline bool saveSettings(ofParameterGroup & parameters, string path = "") {
+	if (path == "") path = parameters.getName();
+
 	//if the destination folder do not exists, will be created.
 	if (!ofDirectory::doesDirectoryExist(ofFilePath::getEnclosingDirectory(path))) {
 		if (ofFilePath::createEnclosingDirectory(path))
@@ -104,10 +108,10 @@ inline void checkFolderOrCreate(string path) {
 
 // LEGACY
 // for ofxSurfingHelpers
-inline bool loadGroup(ofParameterGroup & parameters, string path) {
+inline bool loadGroup(ofParameterGroup & parameters, string path = "") {
 	return loadSettings(parameters, path);
 }
-inline bool saveGroup(ofParameterGroup & parameters, string path) {
+inline bool saveGroup(ofParameterGroup & parameters, string path = "") {
 	return saveSettings(parameters, path);
 }
 
@@ -187,9 +191,9 @@ inline void setWindowAtMonitor(int pos = 0, bool bPortrait = false, int fps = 60
 
 //--------------------------------------------------------------
 inline string setWindowShapeSquared(int sz = 800) {
-	string s = "Squared " + ofToString(sz) + "x" + ofToString(sz) + " (1:1)";
 	ofSetWindowShape(sz, sz);
 
+	string s = "Squared " + ofToString(sz) + "x" + ofToString(sz) + " (1:1)";
 	return s;
 }
 
@@ -202,22 +206,22 @@ inline string setWindowShapeForInstagram(size_t i = 0, bool bForcePos = false) {
 	*/
 
 	vector<string> names = {
-		"IGTV Cover Photo: \n420x654 1:1.55",
-		"IG Landscape Photo: \n1080x566 1.91:1",
-		"IG Portrait: \n1080x1350 4:5",
-		"IG Story: \n1080x1920 9:16",
-		"IG Square: \n1080x1080 1:1",
+		"1080x1920 9:16\nIG Story",
+		"1080x1080 1:1\nIG Square",
+		"1080x1350 4:5\nIG Portrait",
+		"1080x566 1.91:1\nIG Landscape",
+		"420x654 1:1.55\nIGTV Cover",
 	};
 
 	i = ofClamp(i, 0, names.size() - 1);
 
 	//if (bForcePos) ofSetWindowPosition(0, 0);
 
-	if (i == 0) ofSetWindowShape(420, 654); // IGTV Cover
-	if (i == 1) ofSetWindowShape(1080, 566); // IGLandscape
+	if (i == 0) ofSetWindowShape(1080, 1920); // IG Story
+	if (i == 1) ofSetWindowShape(1080, 1080); // IG Square
 	if (i == 2) ofSetWindowShape(1080, 1350); // IG Portrait
-	if (i == 3) ofSetWindowShape(1080, 1920); // IG Story
-	if (i == 4) ofSetWindowShape(1080, 1080); // IG Square
+	if (i == 3) ofSetWindowShape(1080, 566); // IG Landscape
+	if (i == 4) ofSetWindowShape(420, 654); // IGTV Cover
 
 	if (bForcePos) ofSetWindowPosition(0, 0); //fix force
 
@@ -470,7 +474,7 @@ enum SURFING_LAYOUT {
 	SURFING_LAYOUT_MOUSE_POS_CENTER,
 #endif
 
-	SURFING_LAYOUT_AMOUNT,
+	SURFING_LAYOUT_AMOUNT
 };
 
 //--------------------------------------------------------------
@@ -534,18 +538,7 @@ inline string getLayoutName(int layout) {
 inline glm::vec2 getBitmapStringBoxPosToLayout(string s, SURFING_LAYOUT layout) {
 	glm::vec2 p { 0, 0 };
 
-	if (layout == SURFING_LAYOUT_CENTER_LEFT) {
-		// center
-		p = getBitmapStringBoxPosToCenterLeft(s);
-	} else if (layout == SURFING_LAYOUT_CENTER) {
-		// center
-		p = getBitmapStringBoxPosToCenter(s);
-	} else if (layout == SURFING_LAYOUT_CENTER_RIGHT) {
-		// center
-		p = getBitmapStringBoxPosToCenterRight(s);
-	}
-
-	else if (layout == SURFING_LAYOUT_TOP_LEFT) {
+	if (layout == SURFING_LAYOUT_TOP_LEFT) {
 		// top-left
 		p = getBitmapStringBoxPosToTopLeft(s);
 	} else if (layout == SURFING_LAYOUT_TOP_CENTER) {
@@ -554,6 +547,17 @@ inline glm::vec2 getBitmapStringBoxPosToLayout(string s, SURFING_LAYOUT layout) 
 	} else if (layout == SURFING_LAYOUT_TOP_RIGHT) {
 		// top-right
 		p = getBitmapStringBoxPosToTopRight(s);
+	}
+
+	else if (layout == SURFING_LAYOUT_CENTER_LEFT) {
+		// center-left
+		p = getBitmapStringBoxPosToCenterLeft(s);
+	} else if (layout == SURFING_LAYOUT_CENTER) {
+		// center-center
+		p = getBitmapStringBoxPosToCenter(s);
+	} else if (layout == SURFING_LAYOUT_CENTER_RIGHT) {
+		// center-right
+		p = getBitmapStringBoxPosToCenterRight(s);
 	}
 
 	else if (layout == SURFING_LAYOUT_BOTTOM_LEFT) {
@@ -608,7 +612,7 @@ inline glm::vec2 getBitmapStringBoxPosToLayout(string s, int layout) {
 }
 
 //--------------------------------------------------------------
-inline void ofDrawBitmapStringBox(string s, SURFING_LAYOUT layout = SURFING_LAYOUT_CENTER) {
+inline void ofDrawBitmapStringBox(string s, SURFING_LAYOUT layout = SURFING_LAYOUT_TOP_LEFT) {
 	glm::vec2 p = ofxSurfing::getBitmapStringBoxPosToLayout(s, layout);
 	ofxSurfing::ofDrawBitmapStringBox(s, p.x, p.y);
 }
@@ -652,79 +656,178 @@ inline void ofDrawBitmapStringBox(string s, int layout /* = 0*/) {
 	ofxGui Helpers
 */
 
+/*
+	SURFING_LAYOUT_TOP_LEFT = 0,
+	SURFING_LAYOUT_TOP_CENTER,
+	SURFING_LAYOUT_TOP_RIGHT,
+
+	SURFING_LAYOUT_CENTER_LEFT,
+	SURFING_LAYOUT_CENTER,
+	SURFING_LAYOUT_CENTER_RIGHT,
+
+	SURFING_LAYOUT_BOTTOM_LEFT,
+	SURFING_LAYOUT_BOTTOM_CENTER,
+	SURFING_LAYOUT_BOTTOM_RIGHT,
+*/
+
 //--------------------------------------------------------------
-inline void setGuiPositionToLayout(ofxPanel & gui, int layout = 0) {
-	//TODO: Could add other layout positions and use above enum..
+inline void setGuiPositionToLayout(ofxPanel & gui, int layout /* = 0*/) {
 
 	// Move gui panel window to:
 	glm::vec2 p;
-	int pad = SURFING__PAD_TO_WINDOW_BORDERS; //to borders
+	int pad = SURFING__PAD_TO_WINDOW_BORDERS; // to borders
 
-	// bottom-center
-	if (layout == 0) {
-		int x = ofGetWindowWidth() / 2 - gui.getShape().getWidth() / 2;
-		int y = ofGetWindowHeight() - gui.getShape().getHeight() - pad;
+	// top-left
+	if (layout == SURFING_LAYOUT_TOP_LEFT) {
+		int x = pad;
+		int y = pad;
 		p = glm::vec2(x, y);
 	}
-
 	// top-center
-	else if (layout == 1) {
+	else if (layout == SURFING_LAYOUT_TOP_CENTER) {
 		int x = ofGetWindowWidth() / 2 - gui.getShape().getWidth() / 2;
 		int y = pad;
 		p = glm::vec2(x, y);
 	}
-
-	else if (layout == 2)
-	// bottom-right
-	{
-		glm::vec2 p1 = glm::vec2(ofGetWindowWidth(), ofGetHeight());
-		glm::vec2 p2 = glm::vec2(gui.getShape().getWidth() + pad, gui.getShape().getHeight() + pad);
-		p = p1 - p2;
+	// top-right
+	else if (layout == SURFING_LAYOUT_TOP_RIGHT) {
+		int x = ofGetWindowWidth() - gui.getShape().getWidth() - pad;
+		int y = pad;
+		p = glm::vec2(x, y);
 	}
 
-	else if (layout == 3)
+	// center-left
+	else if (layout == SURFING_LAYOUT_CENTER_LEFT) {
+		int x = pad;
+		int y = ofGetWindowHeight() / 2 - gui.getShape().getHeight() / 2;
+		p = glm::vec2(x, y);
+	}
+	// center-center
+	else if (layout == SURFING_LAYOUT_CENTER) {
+		int x = ofGetWindowWidth() / 2 - gui.getShape().getWidth() / 2;
+		int y = ofGetWindowHeight() / 2 - gui.getShape().getHeight() / 2;
+		p = glm::vec2(x, y);
+	}
+	// center-right
+	else if (layout == SURFING_LAYOUT_CENTER_RIGHT) {
+		int x = ofGetWindowWidth() - gui.getShape().getWidth() - pad;
+		int y = ofGetWindowHeight() / 2 - gui.getShape().getHeight() / 2;
+		p = glm::vec2(x, y);
+	}
+
 	// bottom-left
-	{
-		p = glm::vec2(pad, ofGetHeight() - gui.getShape().getHeight() - pad);
+	else if (layout == SURFING_LAYOUT_BOTTOM_LEFT) {
+		int x = pad;
+		int y = ofGetWindowHeight() - gui.getShape().getHeight() - pad;
+		p = glm::vec2(x, y);
+	}
+	// bottom-center
+	else if (layout == SURFING_LAYOUT_BOTTOM_CENTER) {
+		int x = ofGetWindowWidth() / 2 - gui.getShape().getWidth() / 2;
+		int y = ofGetWindowHeight() - gui.getShape().getHeight() - pad;
+		p = glm::vec2(x, y);
+	}
+	// bottom-right
+	else if (layout == SURFING_LAYOUT_BOTTOM_RIGHT) {
+		int x = ofGetWindowWidth() - gui.getShape().getWidth() - pad;
+		int y = ofGetWindowHeight() - gui.getShape().getHeight() - pad;
+		p = glm::vec2(x, y);
+	}
+
+	else {
+		int x = pad;
+		int y = pad;
+		p = glm::vec2(x, y);
 	}
 
 	gui.setPosition(p.x, p.y);
+}
+//--------------------------------------------------------------
+inline void setGuiPositionToLayout(ofxPanel & gui, SURFING_LAYOUT layout) {
+	setGuiPositionToLayout(gui, (int)layout);
 }
 
 // Set position of gui1 at the window bottom and centered
 // (gui2 must be externally linked to gui1 with the correct padding).
 //TODO: other layouts
 //--------------------------------------------------------------
-inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, int layout = 1) {
+inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, int layout = 1, bool bDoubleSpace = false) {
 	//TODO: ADD OTHER LAYOUTS
-	if (layout == 0) { //bottom-center
-		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + SURFING__PAD_OFXGUI_BETWEEN_PANELS;
+
+	float d = float(SURFING__PAD_OFXGUI_BETWEEN_PANELS);
+	if (bDoubleSpace) d *= 2;
+
+	if (layout == 0) { // both bottom-center
+		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + d;
 		int gh = MAX(gui1.getShape().getHeight(), gui2.getShape().getHeight());
 		gh += SURFING__PAD_TO_WINDOW_BORDERS;
 		int x = ofGetWidth() / 2 - gw / 2;
 		int y = ofGetHeight() - gh;
 		gui1.setPosition(x, y);
-	} else if (layout == 1) { //top center
-		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + SURFING__PAD_OFXGUI_BETWEEN_PANELS;
+	}
+
+	else if (layout == 1) { // both top-center
+		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + d;
 		int x = ofGetWidth() / 2 - gw / 2;
 		int y = SURFING__PAD_TO_WINDOW_BORDERS;
 		gui1.setPosition(x, y);
 	}
 }
-/*
 
-TODO
-		// put bb above gui panel
-		// not sure if there is some bug on OF getBoundingBox..
-		//auto bbG = gui.getShape();
-		//auto bbH = ofxSurfing::getBBBitmapStringBox(sHelp);
-		//int x = bbG.getTopLeft().x + bbG.getWidth() / 2;
-		//int y = bbG.getTopLeft().y - bbG.getHeight();
-		//x -= bbH.getWidth() / 2;
-		//y -= 20;
-		//glm::vec2 p { x, y };
-		//ofxSurfing::ofDrawBitmapStringBox(sHelp, p.x, p.y);
-*/
+//--------------------------------------------------------------
+inline void setGuiPositionToLayoutPanelsCentered(ofxPanel & gui1, size_t amount, SURFING_LAYOUT layout, bool bDoubleSpace = false) {
+	//TODO: add other layouts?
+	// to be used for a landscape layout
+	// each panel right to the previous.
+
+	//SURFING_LAYOUT_BOTTOM_CENTER
+	//SURFING_LAYOUT_TOP_CENTER
+
+	float d = float(SURFING__PAD_OFXGUI_BETWEEN_PANELS);
+	if (bDoubleSpace) d *= 2;
+
+	float w = gui1.getShape().getWidth() + d;
+	float h = gui1.getShape().getHeight();
+
+	float x;
+	float y;
+
+	if (layout == SURFING_LAYOUT_BOTTOM_CENTER) { // bottom-center
+		x = ofGetWidth() / 2 - (w * amount) / 2;
+		y = ofGetHeight() - (h + SURFING__PAD_TO_WINDOW_BORDERS);
+	}
+
+	else if (layout == SURFING_LAYOUT_TOP_CENTER) { // top-center
+		x = ofGetWidth() / 2 - (w * amount) / 2;
+		y = SURFING__PAD_TO_WINDOW_BORDERS;
+	}
+
+	else {
+		ofLogWarning("ofxSurfing") << "Layout not implemented to be used by setGuiPositionToLayoutPanelsCentered()";
+
+		x = SURFING__PAD_TO_WINDOW_BORDERS;
+		y = SURFING__PAD_TO_WINDOW_BORDERS;
+	}
+
+	gui1.setPosition(x, y);
+}
+
+//--------------------------------------------------------------
+inline void setGuiPositionRightTo(ofxPanel & guiTarget, ofxPanel & guiAnchor, bool bDoubleSpace = false) {
+	auto bb = guiAnchor.getShape();
+	float d = float(SURFING__PAD_OFXGUI_BETWEEN_PANELS);
+	if (bDoubleSpace) d *= 2;
+	auto p = bb.getTopRight() + glm::vec2 { d, 0 };
+	guiTarget.setPosition(p);
+}
+//--------------------------------------------------------------
+inline void setGuiPositionBelowTo(ofxPanel & guiTarget, ofxPanel & guiAnchor, bool bDoubleSpace = false) {
+	auto bb = guiAnchor.getShape();
+	float d = float(SURFING__PAD_OFXGUI_BETWEEN_PANELS);
+	if (bDoubleSpace) d *= 2;
+	auto p = bb.getBottomLeft() + glm::vec2 { 0, d };
+	guiTarget.setPosition(p);
+}
 
 //--------------------------------------------------------------
 inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
@@ -745,8 +848,8 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 		if (b) {
 			ofxGuiSetFont(pathFont, size);
 		} else {
-			ofLogError(__FUNCTION__) << "Font file " + pathFont + " not found!";
-			ofLogError(__FUNCTION__) << "Unable to customize the ofxGui theme font.";
+			ofLogError("ofxSurfing") << "Font file " + pathFont + " not found!";
+			ofLogError("ofxSurfing") << "Unable to customize the ofxGui theme font.";
 		}
 	}
 
@@ -813,8 +916,8 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 #else
 		if (bMini) {
 			textPadding = 6;
-			defaultWidth = 135;
-			defaultHeight = 15;
+			defaultWidth = 140;
+			defaultHeight = 17;
 		} else {
 			textPadding = 6;
 			defaultWidth = 200;
@@ -963,6 +1066,8 @@ public:
 
 SurfingAutoSaver::SurfingAutoSaver() {
 	ofAddListener(ofEvents().update, this, &SurfingAutoSaver::update);
+
+	bEnable.setSerializable(false); //force always enable
 }
 
 SurfingAutoSaver::~SurfingAutoSaver() {
@@ -1041,7 +1146,6 @@ inline bool pushSetArbTex(bool bEnable) {
 }
 //--------------------------------------------------------------
 inline void popSetArbTex(bool bPrePush) {
-
 	if (bPrePush != ofGetUsingArbTex()) {
 		if (bPrePush)
 			ofEnableArbTex();
