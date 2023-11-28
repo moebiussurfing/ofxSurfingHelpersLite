@@ -51,13 +51,13 @@ namespace ofxSurfing {
 // Load
 //--------------------------------------------------------------
 inline bool loadSettings(ofParameterGroup & parameters, string path = "") {
-	if (path == "") path = parameters.getName();
+	if (path == "") path = parameters.getName() + ".json";
 
 	//verify that the file exist
 	ofFile f;
 	bool b = f.doesFileExist(path);
 	if (b)
-		ofLogNotice("ofxSurfing") << "Found file: " << path;
+		ofLogVerbose("ofxSurfing") << "Found settings file: " << path << " for ofParameterGroup: " << parameters.getName();
 	else
 		ofLogError("ofxSurfing") << "File " << path
 								 << " for ofParameterGroup " << parameters.getName() << " not found!";
@@ -74,7 +74,7 @@ inline bool loadSettings(ofParameterGroup & parameters, string path = "") {
 // Save
 //--------------------------------------------------------------
 inline bool saveSettings(ofParameterGroup & parameters, string path = "") {
-	if (path == "") path = parameters.getName();
+	if (path == "") path = parameters.getName() + ".json";
 
 	//if the destination folder do not exists, will be created.
 	if (!ofDirectory::doesDirectoryExist(ofFilePath::getEnclosingDirectory(path))) {
@@ -88,22 +88,36 @@ inline bool saveSettings(ofParameterGroup & parameters, string path = "") {
 	ofSerialize(settings, parameters);
 	bool b = ofSavePrettyJson(path, settings);
 	if (b)
-		ofLogNotice("ofxSurfing") << "Saved ofParameterGroup: " << parameters.getName() << " to " << path;
+		ofLogVerbose("ofxSurfing") << "Saved ofParameterGroup: " << parameters.getName() << " to " << path;
 	else
 		ofLogError("ofxSurfing") << "Error saving: " << parameters.getName() << " to " << path;
 
 	return b;
 }
 
-// Create if folder not found
+// Create if a folder path is found or not
 //--------------------------------------------------------------
 inline void checkFolderOrCreate(string path) {
 	if (!ofDirectory::doesDirectoryExist(ofFilePath::getEnclosingDirectory(path))) {
-		if (ofFilePath::createEnclosingDirectory(path))
+		if (ofFilePath::createEnclosingDirectory(path), true)
 			ofLogWarning("ofxSurfing") << "Created enclosing folder for: " << path;
 		else
 			ofLogError("ofxSurfing") << "Unable to create enclosing folder for: " << path;
 	}
+	ofLogVerbose("ofxSurfing") << "Found enclosing folder for: " << path;
+}
+
+// Create if a file path is found or not
+//--------------------------------------------------------------
+inline bool checkFileExist(string path) {
+	ofFile f2;
+	bool b2 = f2.doesFileExist(path);
+	if (b2) {
+		ofLogVerbose("ofxSurfing") << "Found file: " << path;
+	} else {
+		ofLogWarning("ofxSurfing") << "File: " << path << " not found!";
+	}
+	return b2;
 }
 
 // LEGACY
@@ -112,6 +126,12 @@ inline bool loadGroup(ofParameterGroup & parameters, string path = "") {
 	return loadSettings(parameters, path);
 }
 inline bool saveGroup(ofParameterGroup & parameters, string path = "") {
+	return saveSettings(parameters, path);
+}
+inline bool load(ofParameterGroup & parameters, string path = "") {
+	return loadSettings(parameters, path);
+}
+inline bool save(ofParameterGroup & parameters, string path = "") {
 	return saveSettings(parameters, path);
 }
 
@@ -149,6 +169,13 @@ inline void setWindowTitleAsProjectName() {
 //	ofxSurfing::setWindowAtMonitor(-1, true); // Left monitor portrait
 //	ofxSurfing::setWindowAtMonitor(-1, false); // Left monitor landscape
 //	ofxSurfing::setWindowAtMonitor(1, false , 120, true); // Right monitor landscape, 60fps, vSync on
+
+// Examples:
+// Move and shape the window app.
+// Customizes settings too: 60fps and vSync off.
+//ofxSurfing::setWindowAtMonitor(); // Stay at main display (center in my setup) and landscape.
+//ofxSurfing::setWindowAtMonitor(-1); // Move to left display and set landscape.
+//ofxSurfing::setWindowAtMonitor(1, true); // Move to right display and set portrait.
 //--------------------------------------------------------------
 inline void setWindowAtMonitor(int pos = 0, bool bPortrait = false, int fps = 60, bool vSync = false) {
 
@@ -751,13 +778,13 @@ inline void setGuiPositionToLayout(ofxPanel & gui, SURFING_LAYOUT layout) {
 // (gui2 must be externally linked to gui1 with the correct padding).
 //TODO: other layouts
 //--------------------------------------------------------------
-inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, int layout = 1, bool bDoubleSpace = false) {
+inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, SURFING_LAYOUT layout = SURFING_LAYOUT_BOTTOM_CENTER, bool bDoubleSpace = false) {
 	//TODO: ADD OTHER LAYOUTS
 
 	float d = float(SURFING__PAD_OFXGUI_BETWEEN_PANELS);
 	if (bDoubleSpace) d *= 2;
 
-	if (layout == 0) { // both bottom-center
+	if (layout == SURFING_LAYOUT_BOTTOM_CENTER) { // both bottom-center
 		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + d;
 		int gh = MAX(gui1.getShape().getHeight(), gui2.getShape().getHeight());
 		gh += SURFING__PAD_TO_WINDOW_BORDERS;
@@ -766,11 +793,15 @@ inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, int lay
 		gui1.setPosition(x, y);
 	}
 
-	else if (layout == 1) { // both top-center
+	else if (layout == SURFING_LAYOUT_TOP_CENTER) { // both top-center
 		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + d;
 		int x = ofGetWidth() / 2 - gw / 2;
 		int y = SURFING__PAD_TO_WINDOW_BORDERS;
 		gui1.setPosition(x, y);
+	}
+
+	else {
+		ofLogWarning("ofxSurfing") << "Layout not implemented for setGuiPositionToLayoutBoth(" + ofToString(layout) + ")";
 	}
 }
 
@@ -803,7 +834,7 @@ inline void setGuiPositionToLayoutPanelsCentered(ofxPanel & gui1, size_t amount,
 	}
 
 	else {
-		ofLogWarning("ofxSurfing") << "Layout not implemented to be used by setGuiPositionToLayoutPanelsCentered()";
+		ofLogWarning("ofxSurfing") << "Layout not implemented for setGuiPositionToLayoutPanelsCentered(" + ofToString(layout) + ")";
 
 		x = SURFING__PAD_TO_WINDOW_BORDERS;
 		y = SURFING__PAD_TO_WINDOW_BORDERS;
@@ -916,7 +947,7 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 #else
 		if (bMini) {
 			textPadding = 6;
-			defaultWidth = 140;
+			defaultWidth = 150;
 			defaultHeight = 17;
 		} else {
 			textPadding = 6;
@@ -929,6 +960,39 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 		ofxGuiSetDefaultHeight(defaultHeight);
 	}
 }
+};
+
+//TODO:
+// queue ofxPanels.
+// set anchor panel
+// set position for linked
+//--------------------------------------------------------------
+class SurfingOfxGuiPanelsManager {
+	/*
+	//--------------------------------------------------------------
+void SurfingSceneManager::drawGui() {
+	gui.draw();
+
+	if (lights.bGui) {
+		ofxSurfing::setGuiPositionRightTo(lights.gui, gui);
+		lights.drawGui();
+	}
+
+	if (bGui_Materials) {
+		ofxSurfing::setGuiPositionRightTo(guiMaterials, lights.bGui ? lights.gui : gui);
+		guiMaterials.draw();
+	}
+
+	if (bGui_Colors) {
+		ofxSurfing::setGuiPositionRightTo(guiColors, guiMaterials);
+		guiColors.draw();
+	}
+}
+	*/
+public:
+	SurfingOfxGuiPanelsManager() {};
+
+	~SurfingOfxGuiPanelsManager() {};
 };
 
 //------
@@ -953,6 +1017,8 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 
 	void ofxSurfingPBR::Changed(ofAbstractParameter & e) {
 		// ...	
+		//if (e.isSerializable())//to exclude saving 
+		//for non required parameters like void types.
 		autoSaver.saveSoon();
 	}
 
@@ -1012,6 +1078,8 @@ public:
 		if (bEnable) {
 			bEnable.setWithoutEventNotifications(false);
 		}
+
+		bFlagSave = false; //fix just in case
 	}
 
 	void start() {
@@ -1058,8 +1126,11 @@ public:
 
 public:
 	void save() {
+		if (!bEnable) {
+			ofLogWarning("SurfingAutoSaver") << "Skipped / Save as disabled " << name;
+			return;
+		}
 		if (f_Saver != nullptr) f_Saver();
-
 		ofLogVerbose("SurfingAutoSaver") << "Save() " << name;
 	}
 };
