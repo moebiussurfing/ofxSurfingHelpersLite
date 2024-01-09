@@ -17,7 +17,8 @@
 
 // Default font and sizes/colors will be used to customize ofxGui!
 #define SURFING__OFXGUI__FONT_DEFAULT_SIZE 9
-#define SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI 7
+#define SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI 6
+//#define SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI 7
 #define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/NotoSansMono-Regular.ttf"
 
 //#define SURFING__OFXGUI__FONT_DEFAULT_SIZE 10
@@ -27,6 +28,53 @@
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMonoNL-ExtraBold.ttf"
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMonoNL-SemiBold.ttf"
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMono-Bold.ttf"
+
+//----
+
+/*
+	* NOTES / SNIPPETS
+		void drawGui() {
+			gui.draw();
+
+			if (lights.bGui) {
+				ofxSurfing::setGuiPositionRightTo(lights.gui, gui);
+				lights.drawGui();
+			}
+
+			if (bGui_Materials) {
+				ofxSurfing::setGuiPositionRightTo(guiMaterials, lights.bGui ? lights.gui : gui);
+				guiMaterials.draw();
+			}
+
+			if (bGui_Colors) {
+				ofxSurfing::setGuiPositionRightTo(guiColors, guiMaterials);
+				guiColors.draw();
+			}
+		}
+
+		// Responsive layout
+		//auto l = pbr.getLayoutHelp();
+		//if (l == ofxSurfing::SURFING_LAYOUT_BOTTOM_LEFT || l == ofxSurfing::SURFING_LAYOUT_CENTER_LEFT)
+		//	ofxSurfing::ofDrawBitmapStringBox(sHelp, ofxSurfing::SURFING_LAYOUT_BOTTOM_RIGHT);
+		//else
+		//	ofxSurfing::ofDrawBitmapStringBox(sHelp, ofxSurfing::SURFING_LAYOUT_BOTTOM_LEFT);
+
+
+				// Force position for material gui
+			glm::vec3 p;
+	#if 1
+			p = gui.getShape().getTopRight() + glm::vec2(SURFING__OFXGUI__PAD_BETWEEN_PANELS, 0);
+	#else
+			if (isWindowPortrait()) {
+				p = gui.getShape().getBottomLeft() + glm::vec2(0, SURFING__OFXGUI__PAD_BETWEEN_PANELS);
+			} else {
+				p = gui.getShape().getTopRight() + glm::vec2(SURFING__OFXGUI__PAD_BETWEEN_PANELS, 0);
+			}
+	#endif
+			material.setGuiPosition(p);
+*/
+
+//----
 
 namespace ofxSurfing {
 
@@ -147,13 +195,14 @@ inline void setGuiPositionToLayout(ofxPanel & gui, int layout /* = 0*/) {
 
 	gui.setPosition(p.x, p.y);
 }
+
 //--------------------------------------------------------------
 inline void setGuiPositionToLayout(ofxPanel & gui, SURFING_LAYOUT layout) {
 	setGuiPositionToLayout(gui, (int)layout);
 }
 
-// Set position of gui1 at the window bottom and centered
-// (gui2 must be externally linked to gui1 with the correct padding).
+// Set position of guiAnchor at the window bottom and centered
+// (gui2 must be externally linked to guiAnchor with the correct padding).
 //TODO: other layouts
 //--------------------------------------------------------------
 inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, SURFING_LAYOUT layout = SURFING_LAYOUT_BOTTOM_CENTER, bool bDoubleSpace = false) {
@@ -181,12 +230,12 @@ inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, SURFING
 	}
 
 	else {
-		ofLogWarning("ofxSurfing") << "Layout not implemented for setGuiPositionToLayoutBoth(" + ofToString(layout) + ")";
+		ofLogWarning("SurfingOfxGuiPanelsManager") << "Layout not implemented for setGuiPositionToLayoutBoth(" + ofToString(layout) + ")";
 	}
 }
 
 //--------------------------------------------------------------
-inline void setGuiPositionToLayoutPanelsCentered(ofxPanel & gui1, size_t amount, SURFING_LAYOUT layout, bool bDoubleSpace = false) {
+inline void setGuiPositionToLayoutPanelsCentered(ofxPanel & guiAnchor, size_t amount, SURFING_LAYOUT layout) {
 	//TODO: add other layouts?
 	// to be used for a landscape layout
 	// each panel right to the previous.
@@ -195,21 +244,20 @@ inline void setGuiPositionToLayoutPanelsCentered(ofxPanel & gui1, size_t amount,
 	//SURFING_LAYOUT_TOP_CENTER
 
 	float d = float(SURFING__OFXGUI__PAD_BETWEEN_PANELS);
-	if (bDoubleSpace) d *= 2;
 
-	float w = gui1.getShape().getWidth() + d;
-	float h = gui1.getShape().getHeight();
+	float w = guiAnchor.getWidth();
+	float h = guiAnchor.getHeight();
 
 	float x;
 	float y;
 
+	x = ofGetWidth() / 2 - (w * amount + d) / 2 - d;
+
 	if (layout == SURFING_LAYOUT_BOTTOM_CENTER) { // bottom-center
-		x = ofGetWidth() / 2 - (w * amount) / 2;
 		y = ofGetHeight() - (h + SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS);
 	}
 
 	else if (layout == SURFING_LAYOUT_TOP_CENTER) { // top-center
-		x = ofGetWidth() / 2 - (w * amount) / 2;
 		y = SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS;
 	}
 
@@ -220,7 +268,7 @@ inline void setGuiPositionToLayoutPanelsCentered(ofxPanel & gui1, size_t amount,
 		y = SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS;
 	}
 
-	gui1.setPosition(x, y);
+	guiAnchor.setPosition(x, y);
 }
 
 //--------------------------------------------------------------
@@ -319,21 +367,23 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 #if bDebugDefault
 		// Default
 		/*
-		int ofxBaseGui::textPadding = 4;
 		int ofxBaseGui::defaultWidth = 200;
+		int ofxBaseGui::textPadding = 4;
 		int ofxBaseGui::defaultHeight = 18;
 		*/
-		textPadding = 4;
 		defaultWidth = 200;
+		textPadding = 4;
 		defaultHeight = 18;
 #else
 		if (bMini) {
-			textPadding = 6;
 			defaultWidth = 150;
-			defaultHeight = 17;
+			textPadding = 4;
+			defaultHeight = 14;
+			//textPadding = 6;
+			//defaultHeight = 17;
 		} else {
-			textPadding = 6;
 			defaultWidth = 200;
+			textPadding = 6;
 			defaultHeight = 18;
 		}
 #endif
@@ -344,193 +394,385 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 }
 };
 
-//--
+//----
 
-// This class store the ofxGui panel position.
-// queue ofxPanels.
-// set anchor panel
-// set position for linked.
-//
-// TODO:
-// make derived from ofxPanel?
-// add bGui
+/*
+	SurfingOfxGuiPanelsManager
+	
+	This class stores the ofxPanel position for the main anchor panel.
+	First panel added is used as anchor.
+	but also queues many other added ofxPanels. 
+	it will create or allows passing their visible toggles (bGui),
+	It will auto handle their minimized state.
+	There are two layouts too: centered top and bottom.
+	to link and to set the position for the others linked.
+	Default mode is SURFING__OFXGUI__MODE_FULL, 
+	but we can only draw without forcing the panel position,
+	or only settings position without drawing etc..
+*/
+
+//--
 
 /*
 
 EXAMPLE
 
 ofxPanel gui;
+ofxPanel gui2;
 SurfingOfxGuiPanelsManager guiManager;
 	
 void setup() {
-	parameters.add(guiManager.bAutoLayout);
-	parameters.add(bHelp);
-	
-	gui.setup(parameters);
-	refreshGui();//apply folder minimizes here
+	gui.setup(params);
+	gui2.setup(params2);
+
 	guiManager.setup(&gui);
+	guiManager.add(&gui);
+	guiManager.add(&gui2);
 }
 
-void refreshGui() {
-	if (!guiManager.bAutoLayout) return;
+void draw() {
+	gui.draw();
 }
 
 */
-#define SURFING_USE_GUI_EXTRA 0 //TODO
+
+//----
+
+namespace ofxSurfing {
+enum SURFING__OFXGUI__MODE {
+	SURFING__OFXGUI__MODE_FULL = 1 << 0, // 1
+	SURFING__OFXGUI__MODE_DRAW = 1 << 1, // 2
+	SURFING__OFXGUI__MODE_POSITION = 1 << 2, // 4
+	SURFING__OFXGUI__MODE_OF_RECTANGLE = 1 << 3, // 8//TODO
+
+	SURFING__OFXGUI__MODE_AMOUNT
+};
 
 //TODO
-namespace ofxSurfing {
 enum SURFING__OFXGUI__LAYOUT_ALIGN {
 	SURFING__OFXGUI__LAYOUT_ALIGN_HORIZONTAL = 0,
 	SURFING__OFXGUI__LAYOUT_ALIGN_VERTICAL
 };
 
-enum SURFING__OFXGUI__MODE {
-	SURFING__OFXGUI__MODE_DRAW_AND_POSITION = 0,
-	SURFING__OFXGUI__MODE_ONLY_POSITION,
-	SURFING__OFXGUI__MODE_ONLY_DRAW
-};
 }
 
 //--------------------------------------------------------------
 class SurfingOfxGuiPanelsManager {
-
-public:
 public:
 	SurfingOfxGuiPanelsManager() {
 		name = "";
 		path = "";
+		filenameSuffix = "_ofxGui.json";
+
+		paramsGuiManager.add(bAutoLayout);
+		paramsGuiManager.add(indexAlign);
+		paramsGuiManager.add(nameAlign);
+		paramsGuiManager.add(indexLayout);
+		paramsGuiManager.add(nameLayout);
+
+		listenerIndexAlign = indexAlign.newListener([this](int & i) {
+			switch (i) {
+			case 0:
+				nameAlign = "HORIZONTAL";
+				break;
+			case 1:
+				nameAlign = "VERTICAL";
+				break;
+			default:
+				nameAlign = "NONE";
+				break;
+			}
+		});
+
+		listenerIndexLayout = indexLayout.newListener([this](int & i) {
+			switch (i) {
+			case 0:
+				nameLayout = "A"; //bottom when horizontal
+				break;
+			case 1:
+				nameLayout = "B"; //top when horizontal
+				break;
+			default:
+				nameLayout = "NONE";
+				break;
+			}
+		});
+
 		bDoneStartup = false;
-	};
+	}
 
 	~SurfingOfxGuiPanelsManager() {
-		//TODO: kind of bad practice..
 		exit();
-	};
-
-#if (SURFING_USE_GUI_EXTRA)
-public:
-	ofxPanel gui; //visible toggles
-	ofParameter<bool> bGui;
-#endif
+		//TODO: kind of bad practice saving on exit..
+	}
 
 private:
-	ofxPanel * guiAnchor; //act as anchor
+	ofxPanel * guiAnchorPtr; //act as anchor main panel (left)
 
-	//data
-	//TODO: make a struct
+	//TODO: could make a data struct..?
 	vector<ofxPanel *> guis;
 	vector<ofParameter<bool>> bGuis;
+	ofParameterGroup paramsTogglesUI { "UI" };
+	ofParameterGroup paramsTogglesSettings { "UI" };
+	vector<ofParameter<bool>> bMinimizeds;
+	ofParameterGroup paramsMinimizeds { "Minimizeds" };
 	vector<ofxSurfing::SURFING__OFXGUI__MODE> modes;
+	ofParameterGroup parameters { "GuiManager" };
 
-	ofParameterGroup parameters;
-
+private:
 	ofParameter<glm::vec2> position { "Position",
 		glm::vec2(SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS, SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS),
 		glm::vec2(0, 0),
 		glm::vec2(3840, 2160) }; //4k
 
 public:
+	ofParameterGroup paramsGuiManager { "GuiManager" };
+
+public:
 	ofParameter<bool> bAutoLayout { "AutoLayout", false };
+	ofParameter<int> indexAlign { "Align", 0, 0, 1 };
+	ofParameter<string> nameAlign { "Mode", "NONE" };
+	ofParameter<int> indexLayout { "Layout", 0, 0, 1 };
+	ofParameter<string> nameLayout { "Name", "NONE" };
+	// horizontal
+	// A bottom
+	// B top
+	// vertical
+	// A left
+	// B right
 
 private:
-#if (SURFING_USE_GUI_EXTRA)
-	ofParameterGroup bGuiParams;
-	ofParameterGroup & getParametersGui() {
-		return bGuiParams;
-	}
-	bool bUseGuiVisibles = false;
-#endif
+	ofEventListener listenerIndexLayout;
+	ofEventListener listenerIndexAlign;
 
+	bool bAutoAddInternalParamasToMainPanel = true;
+
+public:
+	void setAutoAddInternalParamasToMainPanel(bool b) {
+		bAutoAddInternalParamasToMainPanel = b;
+	}
+
+private:
 	string name;
 	string path;
+	string filenameSuffix;
 	bool bDoneStartup;
 
 public:
-	void setup(ofxPanel * gAnchor) {
-		guiAnchor = gAnchor;
-		name = guiAnchor->getName();
+	void setup(ofxPanel * gAnchorPtr) {
+		guiAnchorPtr = gAnchorPtr;
+		name = guiAnchorPtr->getName();
+
+		ofLogNotice("SurfingOfxGuiPanelsManager") << "setup(" << name << ")";
+
+		path = name + filenameSuffix;
 
 		parameters.setName(name);
 		parameters.add(position);
 		parameters.add(bAutoLayout);
+		parameters.add(indexLayout);
+		parameters.add(nameLayout);
+		parameters.add(indexAlign);
+		parameters.add(nameAlign);
+
+		nameAlign.setSerializable(false);
+		nameLayout.setSerializable(false);
 	}
 
-#if (SURFING_USE_GUI_EXTRA)
-	void setUseGuiVisibles(bool b) {
-		bUseGuiVisibles = b;
-	}
-#endif
+	//--
 
 	void add(ofxPanel * g, ofParameter<bool> & b, ofxSurfing::SURFING__OFXGUI__MODE mode) {
-		modes.push_back(mode);
 		bGuis.emplace_back(b);
+
 		guis.push_back(g);
+		modes.push_back(mode);
+
+		ofParameter<bool> bm;
+		bm.set(g->getName() + "_minimized", false);
+		bMinimizeds.push_back(bm);
 	}
 
 	void add(ofxPanel * g, ofParameter<bool> & b) {
 		bGuis.emplace_back(b);
+
 		guis.push_back(g);
-		modes.push_back(ofxSurfing::SURFING__OFXGUI__MODE_DRAW_AND_POSITION);
+		modes.push_back(ofxSurfing::SURFING__OFXGUI__MODE_FULL);
+
+		ofParameter<bool> bm;
+		bm.set(g->getName() + "_minimized", false);
+		bMinimizeds.push_back(bm);
+	}
+
+	void add(ofxPanel * g, ofxSurfing::SURFING__OFXGUI__MODE mode) {
+		ofParameter<bool> b;
+		string n = "";
+		n += "UI ";
+		n += g->getName();
+		b.set(n, true);
+		bGuis.emplace_back(b);
+
+		guis.push_back(g);
+		modes.push_back(ofxSurfing::SURFING__OFXGUI__MODE_FULL);
+
+		ofParameter<bool> bm;
+		bm.set(g->getName() + "_minimized", false);
+		bMinimizeds.push_back(bm);
 	}
 
 	void add(ofxPanel * g) {
 		ofParameter<bool> b;
-		b.set(g->getName(), true);
-		add(g, b);
+		string n = "";
+		n += "UI ";
+		n += g->getName();
+		b.set(n, true);
 		bGuis.emplace_back(b);
+
 		guis.push_back(g);
-#if (SURFING_USE_GUI_EXTRA)
-		bGuiParams.add(bGuiParams);
-#endif
-		modes.push_back(ofxSurfing::SURFING__OFXGUI__MODE_DRAW_AND_POSITION);
+		modes.push_back(ofxSurfing::SURFING__OFXGUI__MODE_FULL);
+
+		ofParameter<bool> bm;
+		bm.set(g->getName() + "_minimized", false);
+		bMinimizeds.push_back(bm);
 	}
 
-	void startup() {
-#if (SURFING_USE_GUI_EXTRA)
-		string n = name;
-		//string n = "UI PANELS " + name;
+	//--
 
-		bGui.set(n, true);
-
-		bGuiParams.setName(n);
-		//bGuiParams.add(bAutoLayout);
-
-		parameters.add(bGuiParams);
-
-		if (bUseGuiVisibles)
-			gui.setup(bGuiParams);
-#endif
+	void startup(bool bSkipSettings = false) { //pass true to load default settings!
+		ofLogNotice("SurfingOfxGuiPanelsManager") << "startup()";
 
 		//--
 
-		path = name + "_ofxGui.json";
-		ofxSurfing::load(parameters, path);
+		//don't add anchor main toggle!
+		for (size_t i = 0; i < bGuis.size(); i++) {
+			paramsTogglesSettings.add(bGuis[i]);
+			if (i == 0) continue;
 
-		guiAnchor->setPosition(position.get().x, position.get().y);
+			paramsTogglesUI.add(bGuis[i]);
+			ofLogNotice("SurfingOfxGuiPanelsManager") << "add bGui: " << bGuis[i].getName() << " " << (bGuis[i].get() ? "True" : "False");
+		}
+
+		for (size_t i = 0; i < bMinimizeds.size(); i++) {
+			paramsMinimizeds.add(bMinimizeds[i]);
+			ofLogNotice("SurfingOfxGuiPanelsManager") << "added minimized state for:" << guis[i]->getName();
+		}
+
+		//--
+
+		//add to groups
+		paramsTogglesUI.add(paramsGuiManager);
+
+		if (bAutoAddInternalParamasToMainPanel) {
+			guis[0]->add(paramsTogglesUI);
+			guis[0]->getGroup(paramsTogglesUI.getName()).getGroup(paramsGuiManager.getName()).minimize();
+		}
+
+		//--
+
+		//for the settings only
+		parameters.add(paramsTogglesSettings);
+		parameters.add(paramsMinimizeds);
+
+		//--
+
+		if (!bSkipSettings) load();
+
+		//--
 
 		bDoneStartup = true;
 	}
 
-	void refreshGui(int layout = -1) {
-		if (guiAnchor == nullptr) return;
+	void refreshGui() {
+		if (guiAnchorPtr == nullptr) return;
 		if (bGuis.size() == 0) return;
 
 		if (bAutoLayout) {
-			ofxSurfing::SURFING_LAYOUT l;
+			//force anchor panel position
 
-			if (layout == -1) layout = 0; //default
+			int x = 0;
+			int y = 0;
+			int pad = SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS; // to borders
+			float wPanel = guis[0]->getWidth();
 
-			//TODO
-			if (layout == 0) {
-				l = ofxSurfing::SURFING_LAYOUT_BOTTOM_CENTER;
-			} else {
-				l = ofxSurfing::SURFING_LAYOUT_TOP_CENTER;
+			if (indexAlign == 0) //horizontal
+			{
+				int count = 0;//count visible panels to center correctly
+#if 0
+				count = guis.size();
+#else
+				for (size_t i = 0; i < bGuis.size(); i++) {
+					if (bGuis[i]) count++;
+				}
+#endif
+
+				int w = count * wPanel;
+				x = ofGetWidth() / 2 - w / 2;
+
+				// bottom
+				if (indexLayout == 0) { //SURFING_LAYOUT_BOTTOM_CENTER
+					float hmax = 0;
+					for (auto g : guis) {
+						if (hmax < g->getHeight()) hmax = g->getHeight();
+					}
+					y = ofGetHeight() - hmax - pad;
+				}
+				// top center
+				else if (indexLayout == 1) { //SURFING_LAYOUT_TOP_CENTER
+					y = pad;
+				}
 			}
 
-			ofxSurfing::setGuiPositionToLayout(*guiAnchor, l);
-			//ofxSurfing::setGuiPositionToLayoutBoth(gui, modelsManager.getGui(), l);
+			else if (indexAlign == 1) //vertical
+			{
+				// top left
+				if (indexLayout == 0) {
+					x = pad;
+					y = pad;
+				}
+
+				// right
+				else if (indexLayout == 1) {
+					//top
+					x = ofGetWidth() - pad - wPanel;
+					y = pad;
+
+					////bottom. fails when anyone is minimized..
+					//float htotal= 0;
+					//for (auto g : guis) {
+					//	 htotal += g->getHeight();
+					//}
+					//y = ofGetHeight() - htotal - pad;
+				}
+
+				else { //default
+					x = pad;
+					y = pad;
+				}
+			}
+
+			guis[0]->setPosition(x, y);
 		}
+	}
+
+	inline void setGuiAnchorPositionToLayout(ofxSurfing::SURFING_LAYOUT layout) {
+		if (guiAnchorPtr == nullptr) return;
+		if (bGuis.size() == 0) return;
+
+		ofxSurfing::setGuiPositionToLayout(*guis[0], (int)layout);
+	}
+
+	const ofRectangle getShapePanels() { //get a rect that contains all panels shapes
+		ofRectangle r;
+		if (guiAnchorPtr == nullptr) return r;
+		if (bGuis.size() == 0) return r;
+
+		ofRectangle r0 = guis[0]->getShape();
+		r = r0;
+
+		for (size_t i = 1; i < guis.size(); i++) {
+			r = r.getUnion(guis[i]->getShape());
+		}
+
+		return r;
 	}
 
 private:
@@ -539,78 +781,98 @@ private:
 			startup();
 		}
 
+		// link all panels position to anchor/main panel
 		int i_ = 0; // last visible
 		for (size_t i = 1; i < guis.size(); i++) {
 			if (!bGuis[i]) continue;
-			ofxSurfing::setGuiPositionRightTo(*guis[i], *guis[i_]);
+
+			bool b = modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_FULL;
+			b |= modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_POSITION;
+
+			if (b) {
+				if (indexAlign == 0) //horizontal
+					ofxSurfing::setGuiPositionRightTo(*guis[i], *guis[i_]);
+				else if (indexAlign == 1) //vertical
+					ofxSurfing::setGuiPositionBelowTo(*guis[i], *guis[i_]);
+				else //default horizontal
+					ofxSurfing::setGuiPositionRightTo(*guis[i], *guis[i_]);
+			}
 			i_ = i;
 		}
 	}
 
 public:
-	void draw() {
-		if (guiAnchor == nullptr) return;
+	void draw() { //draw all the panels
+		if (guiAnchorPtr == nullptr) return;
 		if (bGuis.size() == 0) return;
 
 		update();
 
 		for (size_t i = 0; i < guis.size(); i++) {
 			if (!bGuis[i]) continue;
-			if (bGuis[i] && modes[i] == ofxSurfing::SURFING__OFXGUI__MODE_DRAW_AND_POSITION) guis[i]->draw();
+
+			bool b = modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_FULL;
+			b |= modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_DRAW;
+
+			if (bGuis[i] && b) guis[i]->draw();
 		}
-#if (SURFING_USE_GUI_EXTRA)
-		if (bGui && bUseGuiVisibles) gui.draw();
-#endif
 	}
 
 private:
 	void exit() {
-		if (guiAnchor == nullptr) return;
-		position = guiAnchor->getPosition();
+		ofLogNotice("SurfingOfxGuiPanelsManager") << "exit()";
+
+		if (guiAnchorPtr == nullptr) return;
+
+		save();
+	}
+
+	void save() { //save all settings
+		ofLogNotice("SurfingOfxGuiPanelsManager") << "save()";
+
+		position = guiAnchorPtr->getPosition();
+
+		//get maximize states
+		for (size_t i = 0; i < bMinimizeds.size(); i++) {
+			bMinimizeds[i] = guis[i]->isMinimized();
+		}
 
 		ofxSurfing::save(parameters, path);
 	}
 
-	/*
-	* NOTES / SNIPPETS
-		void drawGui() {
-			gui.draw();
+	void load() { //load all settings
+		ofLogNotice("SurfingOfxGuiPanelsManager") << "load()";
 
-			if (lights.bGui) {
-				ofxSurfing::setGuiPositionRightTo(lights.gui, gui);
-				lights.drawGui();
-			}
+		//load settings
+		path = name + filenameSuffix;
+		ofxSurfing::load(parameters, path);
 
-			if (bGui_Materials) {
-				ofxSurfing::setGuiPositionRightTo(guiMaterials, lights.bGui ? lights.gui : gui);
-				guiMaterials.draw();
+		//apply maximize states
+		for (size_t i = 0; i < bMinimizeds.size(); i++) {
+			if (bMinimizeds[i]) {
+				guis[i]->minimize();
+			} else {
+				guis[i]->maximize();
 			}
-
-			if (bGui_Colors) {
-				ofxSurfing::setGuiPositionRightTo(guiColors, guiMaterials);
-				guiColors.draw();
-			}
+			ofLogNotice("SurfingOfxGuiPanelsManager") << guis[i]->getName() << ": " << (bMinimizeds[i].get() ? "minimized" : "maximized");
 		}
 
-		// Responsive layout
-		//auto l = pbr.getLayoutHelp();
-		//if (l == ofxSurfing::SURFING_LAYOUT_BOTTOM_LEFT || l == ofxSurfing::SURFING_LAYOUT_CENTER_LEFT)
-		//	ofxSurfing::ofDrawBitmapStringBox(sHelp, ofxSurfing::SURFING_LAYOUT_BOTTOM_RIGHT);
-		//else
-		//	ofxSurfing::ofDrawBitmapStringBox(sHelp, ofxSurfing::SURFING_LAYOUT_BOTTOM_LEFT);
+		//clamp inside the window
+		float x = position.get().x;
+		float y = position.get().y;
+		float xmax = ofGetWidth() - guiAnchorPtr->getWidth();
+		float ymax = ofGetHeight() - guiAnchorPtr->getHeight();
+		bool b = false;
+		if (x > xmax) {
+			x = xmax;
+			b = true;
+		}
+		if (y > ymax) {
+			y = ymax;
+			b = true;
+		}
+		if (b) position.set(glm::vec2(x, y));
 
-
-				// Force position for material gui
-			glm::vec3 p;
-	#if 1
-			p = gui.getShape().getTopRight() + glm::vec2(SURFING__OFXGUI__PAD_BETWEEN_PANELS, 0);
-	#else
-			if (isWindowPortrait()) {
-				p = gui.getShape().getBottomLeft() + glm::vec2(0, SURFING__OFXGUI__PAD_BETWEEN_PANELS);
-			} else {
-				p = gui.getShape().getTopRight() + glm::vec2(SURFING__OFXGUI__PAD_BETWEEN_PANELS, 0);
-			}
-	#endif
-			material.setGuiPosition(p);
-	*/
+		guiAnchorPtr->setPosition(position.get().x, position.get().y);
+	}
 };
