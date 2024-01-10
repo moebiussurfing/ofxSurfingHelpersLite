@@ -37,7 +37,7 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::setupGui() {
-	// all the panels
+	//all the panels
 	gui.setup(parameters);
 	guiAnimate.setup(paramsAnimate);
 	guiTransform.setup(paramsTransforms);
@@ -45,26 +45,29 @@ void ofApp::setupGui() {
 
 	//--
 
-	// the panels manager
+	//the panels manager
 	guiManager.setup(&gui); //anchor main left panel
 
-	//Example for selecting different setup approaches
-	const int APP_MODE = 2; 
-	if (APP_MODE == 0) { //passing panel, each toggle and each mode
-		guiManager.add(&gui, bGui, ofxSurfing::SURFING__OFXGUI__MODE_FULL);
-		guiManager.add(&guiAnimate, bGuiAnimate, ofxSurfing::SURFING__OFXGUI__MODE_FULL);
-		guiManager.add(&guiTransform, bGuiTransform);
-		guiManager.add(&guiScene, bGuiScene);
-	} else if (APP_MODE == 1) { //passing panel and each toggle if you have one.
-		guiManager.add(&gui, bGui);
-		guiManager.add(&guiAnimate, bGuiAnimate);
-		guiManager.add(&guiTransform, bGuiTransform);
-		guiManager.add(&guiScene, bGuiScene);
-	} else if (APP_MODE == 2) { ///passing only the panel. faster approach.
+	//example for selecting different setup approaches
+	const int APP_MODE = 0;
+	if (APP_MODE == 0) {
+		///passing only the panel. faster approach.
 		guiManager.add(&gui);
 		guiManager.add(&guiAnimate);
 		guiManager.add(&guiTransform);
 		guiManager.add(&guiScene);
+	} else if (APP_MODE == 1) {
+		//passing panel and each toggle if you have one.
+		guiManager.add(&gui, bGui);
+		guiManager.add(&guiAnimate, bGuiAnimate);
+		guiManager.add(&guiTransform, bGuiTransform);
+		guiManager.add(&guiScene, bGuiScene);
+	} else if (APP_MODE == 2) {
+		//passing panel, each toggle and each mode
+		guiManager.add(&gui, bGui, ofxSurfing::SURFING__OFXGUI__MODE_FULL);
+		guiManager.add(&guiAnimate, bGuiAnimate, ofxSurfing::SURFING__OFXGUI__MODE_FULL);
+		guiManager.add(&guiTransform, bGuiTransform);
+		guiManager.add(&guiScene, bGuiScene);
 	}
 
 	//guiManager.startup(true); //Optional. pass true to ignore the settings!

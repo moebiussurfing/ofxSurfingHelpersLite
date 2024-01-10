@@ -4,6 +4,12 @@
 #include "ofxGui.h"
 #include "ofxSurfingSerializers.h"
 
+/*
+* ofxGui
+* 
+	ofxGui Helpers
+*/
+
 //------
 
 // CONSTANTS
@@ -18,61 +24,16 @@
 // Default font and sizes/colors will be used to customize ofxGui!
 #define SURFING__OFXGUI__FONT_DEFAULT_SIZE 9
 #define SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI 6
-//#define SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI 7
 #define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/NotoSansMono-Regular.ttf"
 
+// testing alternatives
+//#define SURFING__OFXGUI__FONT_DEFAULT_SIZE_MINI 7
 //#define SURFING__OFXGUI__FONT_DEFAULT_SIZE 10
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/Montserrat-Regular.ttf"
-
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/Inter-Regular.ttf"
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMonoNL-ExtraBold.ttf"
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMonoNL-SemiBold.ttf"
 //#define SURFING__OFXGUI__FONT_DEFAULT_PATH "assets/fonts/JetBrainsMono-Bold.ttf"
-
-//----
-
-/*
-	* NOTES / SNIPPETS
-		void drawGui() {
-			gui.draw();
-
-			if (lights.bGui) {
-				ofxSurfing::setGuiPositionRightTo(lights.gui, gui);
-				lights.drawGui();
-			}
-
-			if (bGui_Materials) {
-				ofxSurfing::setGuiPositionRightTo(guiMaterials, lights.bGui ? lights.gui : gui);
-				guiMaterials.draw();
-			}
-
-			if (bGui_Colors) {
-				ofxSurfing::setGuiPositionRightTo(guiColors, guiMaterials);
-				guiColors.draw();
-			}
-		}
-
-		// Responsive layout
-		//auto l = pbr.getLayoutHelp();
-		//if (l == ofxSurfing::SURFING_LAYOUT_BOTTOM_LEFT || l == ofxSurfing::SURFING_LAYOUT_CENTER_LEFT)
-		//	ofxSurfing::ofDrawBitmapStringBox(sHelp, ofxSurfing::SURFING_LAYOUT_BOTTOM_RIGHT);
-		//else
-		//	ofxSurfing::ofDrawBitmapStringBox(sHelp, ofxSurfing::SURFING_LAYOUT_BOTTOM_LEFT);
-
-
-				// Force position for material gui
-			glm::vec3 p;
-	#if 1
-			p = gui.getShape().getTopRight() + glm::vec2(SURFING__OFXGUI__PAD_BETWEEN_PANELS, 0);
-	#else
-			if (isWindowPortrait()) {
-				p = gui.getShape().getBottomLeft() + glm::vec2(0, SURFING__OFXGUI__PAD_BETWEEN_PANELS);
-			} else {
-				p = gui.getShape().getTopRight() + glm::vec2(SURFING__OFXGUI__PAD_BETWEEN_PANELS, 0);
-			}
-	#endif
-			material.setGuiPosition(p);
-*/
 
 //----
 
@@ -102,12 +63,6 @@ enum SURFING_LAYOUT {
 };
 
 //------
-
-/*
-* ofxGui
-* 
-	ofxGui Helpers
-*/
 
 /*
 	SURFING_LAYOUT_TOP_LEFT = 0,
@@ -397,7 +352,9 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 //----
 
 /*
-	SurfingOfxGuiPanelsManager
+	SurfingOfxGuiPanelsManager class
+
+	Layout and group ofxPanel panels.
 	
 	This class stores the ofxPanel position for the main anchor panel.
 	First panel added is used as anchor.
@@ -438,22 +395,21 @@ void draw() {
 
 //----
 
+#define SURFING__GUI_MANAGER__DEBUG 0
+
 namespace ofxSurfing {
 enum SURFING__OFXGUI__MODE {
 	SURFING__OFXGUI__MODE_FULL = 1 << 0, // 1
 	SURFING__OFXGUI__MODE_DRAW = 1 << 1, // 2
 	SURFING__OFXGUI__MODE_POSITION = 1 << 2, // 4
-	SURFING__OFXGUI__MODE_OF_RECTANGLE = 1 << 3, // 8//TODO
-
+	SURFING__OFXGUI__MODE_OF_RECTANGLE = 1 << 3, // 8//TODO: to handle text windows
 	SURFING__OFXGUI__MODE_AMOUNT
 };
 
-//TODO
 enum SURFING__OFXGUI__LAYOUT_ALIGN {
 	SURFING__OFXGUI__LAYOUT_ALIGN_HORIZONTAL = 0,
 	SURFING__OFXGUI__LAYOUT_ALIGN_VERTICAL
 };
-
 }
 
 //--------------------------------------------------------------
@@ -502,8 +458,7 @@ public:
 	}
 
 	~SurfingOfxGuiPanelsManager() {
-		exit();
-		//TODO: kind of bad practice saving on exit..
+		exit(); //TODO: kind of bad practice saving on exit..
 	}
 
 private:
@@ -534,10 +489,10 @@ public:
 	ofParameter<string> nameAlign { "Mode", "NONE" };
 	ofParameter<int> indexLayout { "Layout", 0, 0, 1 };
 	ofParameter<string> nameLayout { "Name", "NONE" };
-	// horizontal
+	// Horizontal
 	// A bottom
 	// B top
-	// vertical
+	// Vertical
 	// A left
 	// B right
 
@@ -559,8 +514,8 @@ private:
 	bool bDoneStartup;
 
 public:
-	void setup(ofxPanel * gAnchorPtr) {
-		guiAnchorPtr = gAnchorPtr;
+	void setup(ofxPanel * guiAnchorPtr_) {
+		guiAnchorPtr = guiAnchorPtr_;
 		name = guiAnchorPtr->getName();
 
 		ofLogNotice("SurfingOfxGuiPanelsManager") << "setup(" << name << ")";
@@ -690,15 +645,15 @@ public:
 
 			int x = 0;
 			int y = 0;
-			int pad = SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS; // to borders
+			int pad = SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS; //to borders
 			float wPanel = guis[0]->getWidth();
 
 			if (indexAlign == 0) //horizontal
 			{
-				int count = 0;//count visible panels to center correctly
 #if 0
-				count = guis.size();
+				int count = guis.size();//count all
 #else
+				int count = 0; //count visible panels to center correctly
 				for (size_t i = 0; i < bGuis.size(); i++) {
 					if (bGuis[i]) count++;
 				}
@@ -707,7 +662,7 @@ public:
 				int w = count * wPanel;
 				x = ofGetWidth() / 2 - w / 2;
 
-				// bottom
+				//bottom
 				if (indexLayout == 0) { //SURFING_LAYOUT_BOTTOM_CENTER
 					float hmax = 0;
 					for (auto g : guis) {
@@ -715,7 +670,7 @@ public:
 					}
 					y = ofGetHeight() - hmax - pad;
 				}
-				// top center
+				//top center
 				else if (indexLayout == 1) { //SURFING_LAYOUT_TOP_CENTER
 					y = pad;
 				}
@@ -723,24 +678,36 @@ public:
 
 			else if (indexAlign == 1) //vertical
 			{
-				// top left
+				//top left
 				if (indexLayout == 0) {
 					x = pad;
 					y = pad;
 				}
 
-				// right
+				//right
 				else if (indexLayout == 1) {
+#if 1
 					//top
 					x = ofGetWidth() - pad - wPanel;
 					y = pad;
-
-					////bottom. fails when anyone is minimized..
-					//float htotal= 0;
-					//for (auto g : guis) {
-					//	 htotal += g->getHeight();
-					//}
-					//y = ofGetHeight() - htotal - pad;
+#else
+					//bottom. fails when any group is minimized or UI hidden...
+					float htotal = 0;
+					size_t i = 0;
+					for (auto g : guis) {
+						if (!bGuis[i]) continue;
+						//if (g->isMinimized()) {
+						//	htotal += g->getShape().getHeight();
+						//	//htotal += g->isHeaderEnabled();
+						//	continue;
+						//}
+						//htotal += g->getHeight();
+						htotal += g->getShape().getHeight();
+						htotal += float(SURFING__OFXGUI__PAD_BETWEEN_PANELS);
+						i++;
+					}
+					y = ofGetHeight() - htotal - pad;
+#endif
 				}
 
 				else { //default
@@ -816,6 +783,14 @@ public:
 
 			if (bGuis[i] && b) guis[i]->draw();
 		}
+
+#if (SURFING__GUI_MANAGER__DEBUG == 1)
+		ofPushStyle();
+		ofNoFill();
+		ofSetColor(ofColor::red);
+		ofDrawRectangle(getShapePanels());
+		ofPopStyle();
+#endif
 	}
 
 private:
