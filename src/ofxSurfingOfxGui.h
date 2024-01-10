@@ -454,6 +454,9 @@ public:
 			}
 		});
 
+		indexAlign.set(0);
+		indexLayout.set(0);
+
 		bDoneStartup = false;
 	}
 
