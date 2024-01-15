@@ -396,6 +396,7 @@ void draw() {
 //----
 
 #define SURFING__GUI_MANAGER__DEBUG 0
+#define SURFING__GUI_MANAGER__FORCE_REFRESH_GUI 1
 
 namespace ofxSurfing {
 enum SURFING__OFXGUI__MODE {
@@ -438,6 +439,10 @@ public:
 				nameAlign = "NONE";
 				break;
 			}
+
+#if (SURFING__GUI_MANAGER__FORCE_REFRESH_GUI == 0)
+			refreshGui();
+#endif
 		});
 
 		listenerIndexLayout = indexLayout.newListener([this](int & i) {
@@ -452,6 +457,10 @@ public:
 				nameLayout = "NONE";
 				break;
 			}
+
+#if (SURFING__GUI_MANAGER__FORCE_REFRESH_GUI == 0)
+			refreshGui();
+#endif
 		});
 
 		indexAlign.set(0);
@@ -492,6 +501,7 @@ public:
 	ofParameter<string> nameAlign { "Mode", "NONE" };
 	ofParameter<int> indexLayout { "Layout", 0, 0, 1 };
 	ofParameter<string> nameLayout { "Name", "NONE" };
+
 	// Horizontal
 	// A bottom
 	// B top
@@ -504,10 +514,14 @@ private:
 	ofEventListener listenerIndexAlign;
 
 	bool bAutoAddInternalParamasToMainPanel = true;
+	bool bAutoHideFirstToggleVisibleForAnchorPanel = true;
 
 public:
 	void setAutoAddInternalParamasToMainPanel(bool b) {
 		bAutoAddInternalParamasToMainPanel = b;
+	}
+	void setAutoHideFirstToggleVisibleForAnchorPanel(bool b) {
+		bAutoHideFirstToggleVisibleForAnchorPanel = b;
 	}
 
 private:
@@ -603,7 +617,7 @@ public:
 		//don't add anchor main toggle!
 		for (size_t i = 0; i < bGuis.size(); i++) {
 			paramsTogglesSettings.add(bGuis[i]);
-			if (i == 0) continue;
+			if (i == 0 && bAutoHideFirstToggleVisibleForAnchorPanel) continue;
 
 			paramsTogglesUI.add(bGuis[i]);
 			ofLogNotice("SurfingOfxGuiPanelsManager") << "add bGui: " << bGuis[i].getName() << " " << (bGuis[i].get() ? "True" : "False");
@@ -621,7 +635,11 @@ public:
 
 		if (bAutoAddInternalParamasToMainPanel) {
 			guis[0]->add(paramsTogglesUI);
+			
+			//minimize some groups
 			guis[0]->getGroup(paramsTogglesUI.getName()).getGroup(paramsGuiManager.getName()).minimize();
+			guis[0]->getGroup(paramsTogglesUI.getName()).minimize();
+		
 		}
 
 		//--
@@ -769,6 +787,14 @@ private:
 			}
 			i_ = i;
 		}
+
+		//--
+
+#if (SURFING__GUI_MANAGER__FORCE_REFRESH_GUI == 1)
+		//TODO
+		//workflow: force layout
+		refreshGui();
+#endif
 	}
 
 public:
