@@ -637,8 +637,10 @@ public:
 			guis[0]->add(paramsTogglesUI);
 			
 			//minimize some groups
+			//guis[0]->getGroup(paramsTogglesUI.getName()).minimize();//workflow 
+			// useful when not using/exposed external bGui. So using auto populated/internal bGui's!
+
 			guis[0]->getGroup(paramsTogglesUI.getName()).getGroup(paramsGuiManager.getName()).minimize();
-			guis[0]->getGroup(paramsTogglesUI.getName()).minimize();
 		
 		}
 
