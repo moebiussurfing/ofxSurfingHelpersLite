@@ -567,6 +567,7 @@ inline void ofDrawBitmapStringBox(string s, int layout /* = 0*/) {
 inline void ofDrawBitmapStringBox(string s, ofxPanel * gui, SURFING_LAYOUT layout = SURFING_LAYOUT_TOP_RIGHT) {
 	// Set text box position linked to the ofxPanel
 	// but setting the layout position.
+	//TODO: must implement many alternative positions
 
 	glm::vec2 p { 0, 0 };
 
@@ -577,15 +578,15 @@ inline void ofDrawBitmapStringBox(string s, ofxPanel * gui, SURFING_LAYOUT layou
 	if (layout == SURFING_LAYOUT_TOP_LEFT) {
 		p = rgui.getTopLeft();
 		p += glm::vec2(-rbb.getWidth() - pad, 0);
-	} else if (layout == SURFING_LAYOUT_TOP_RIGHT) {
+	} else if (layout == SURFING_LAYOUT_TOP_CENTER||layout == SURFING_LAYOUT_TOP_LEFT||layout == SURFING_LAYOUT_TOP_RIGHT) {
 		p = rgui.getTopRight();
 		p += glm::vec2(pad, 0);
-	} else if (layout == SURFING_LAYOUT_TOP_CENTER) {
+	} else if (layout == SURFING_LAYOUT_TOP_CENTER||layout == SURFING_LAYOUT_TOP_LEFT||layout == SURFING_LAYOUT_TOP_RIGHT) {
 		p = rgui.getTopLeft();
-		p += glm::vec2(pad, -rbb.getHeight() - pad);
-	} else if (layout == SURFING_LAYOUT_BOTTOM_CENTER) {
+		p += glm::vec2(0, -rbb.getHeight() - pad);
+	} else if (layout == SURFING_LAYOUT_BOTTOM_CENTER||layout == SURFING_LAYOUT_BOTTOM_LEFT||layout == SURFING_LAYOUT_BOTTOM_RIGHT) {
 		p = rgui.getBottomLeft();
-		p += glm::vec2(pad, pad);
+		p += glm::vec2(0, pad);
 	} else {
 	}
 

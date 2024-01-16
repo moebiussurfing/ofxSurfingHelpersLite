@@ -372,23 +372,26 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 
 /*
 
-EXAMPLE
+SIMPLE EXAMPLE:
 
-ofxPanel gui;
+ofxPanel gui1;
 ofxPanel gui2;
+ofxPanel gui3;
 SurfingOfxGuiPanelsManager guiManager;
 	
 void setup() {
-	gui.setup(params);
+	gui1.setup(params1);
 	gui2.setup(params2);
+	gui2.setup(params3);
 
-	guiManager.setup(&gui);
-	guiManager.add(&gui);
+	guiManager.setup(&gui1);
+	guiManager.add(&gui1);
 	guiManager.add(&gui2);
+	guiManager.add(&gui3);
 }
 
 void draw() {
-	gui.draw();
+	guiManager.draw();
 }
 
 */
@@ -403,7 +406,7 @@ enum SURFING__OFXGUI__MODE {
 	SURFING__OFXGUI__MODE_FULL = 1 << 0, // 1
 	SURFING__OFXGUI__MODE_DRAW = 1 << 1, // 2
 	SURFING__OFXGUI__MODE_POSITION = 1 << 2, // 4
-	SURFING__OFXGUI__MODE_OF_RECTANGLE = 1 << 3, // 8//TODO: to handle text windows
+	SURFING__OFXGUI__MODE_OF_RECTANGLE = 1 << 3, // 8//TODO: to handle text boxes and other windows
 	SURFING__OFXGUI__MODE_AMOUNT
 };
 
@@ -419,7 +422,15 @@ public:
 	SurfingOfxGuiPanelsManager() {
 		name = "";
 		path = "";
+#if 1
+		//ofxGui_3D_TEXT.json
+		filenamePreffix = "ofxGui_";
+		filenameSuffix = ".json";
+#else
+		//3D_TEXT_ofxGui.json
+		filenamePreffix = "";
 		filenameSuffix = "_ofxGui.json";
+#endif
 
 		paramsGuiManager.add(bAutoLayout);
 		paramsGuiManager.add(indexAlign);
@@ -528,6 +539,7 @@ private:
 	string name;
 	string path;
 	string filenameSuffix;
+	string filenamePreffix;
 	bool bDoneStartup;
 
 public:
@@ -537,7 +549,7 @@ public:
 
 		ofLogNotice("SurfingOfxGuiPanelsManager") << "setup(" << name << ")";
 
-		path = name + filenameSuffix;
+		path = filenamePreffix + name + filenameSuffix;
 
 		parameters.setName(name);
 		parameters.add(position);
@@ -635,13 +647,12 @@ public:
 
 		if (bAutoAddInternalParamasToMainPanel) {
 			guis[0]->add(paramsTogglesUI);
-			
+
 			//minimize some groups
-			//guis[0]->getGroup(paramsTogglesUI.getName()).minimize();//workflow 
+			//guis[0]->getGroup(paramsTogglesUI.getName()).minimize();//workflow
 			// useful when not using/exposed external bGui. So using auto populated/internal bGui's!
 
 			guis[0]->getGroup(paramsTogglesUI.getName()).getGroup(paramsGuiManager.getName()).minimize();
-		
 		}
 
 		//--
@@ -750,17 +761,33 @@ public:
 		ofxSurfing::setGuiPositionToLayout(*guis[0], (int)layout);
 	}
 
+	const bool getGuiVisible(int i) {
+		if (i > bGuis.size() - 1) return false;
+		return bGuis[i].get();
+	}
+
 	const ofRectangle getShapePanels() { //get a rect that contains all panels shapes
 		ofRectangle r;
 		if (guiAnchorPtr == nullptr) return r;
 		if (bGuis.size() == 0) return r;
+		if (!bGuis[0]) return r;
 
 		ofRectangle r0 = guis[0]->getShape();
 		r = r0;
 
 		for (size_t i = 1; i < guis.size(); i++) {
+			if (!bGuis[i]) continue;
 			r = r.getUnion(guis[i]->getShape());
 		}
+
+#if (SURFING__GUI_MANAGER__DEBUG == 1)
+		ofPushStyle();
+		ofSetColor(ofColor::red);
+		ofNoFill();
+		ofDrawRectangle(r);
+		ofPopStyle();
+
+#endif
 
 		return r;
 	}
@@ -769,6 +796,16 @@ private:
 	void update() {
 		if (!bDoneStartup) {
 			startup();
+		}
+
+		if (guiAnchorPtr == nullptr) return;
+		if (bGuis.size() == 0) return;
+		if (!bGuis[0]) return;
+
+		//clamp
+		glm::vec2 p = guiAnchorPtr->getPosition();
+		if (p.x < 0 || p.y < 0) {
+			guiAnchorPtr->setPosition(SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS, SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS);
 		}
 
 		// link all panels position to anchor/main panel
@@ -803,6 +840,7 @@ public:
 	void draw() { //draw all the panels
 		if (guiAnchorPtr == nullptr) return;
 		if (bGuis.size() == 0) return;
+		if (!bGuis[0]) return;
 
 		update();
 
@@ -850,7 +888,6 @@ private:
 		ofLogNotice("SurfingOfxGuiPanelsManager") << "load()";
 
 		//load settings
-		path = name + filenameSuffix;
 		ofxSurfing::load(parameters, path);
 
 		//apply maximize states
