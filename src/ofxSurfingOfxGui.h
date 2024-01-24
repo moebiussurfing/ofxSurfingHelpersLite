@@ -368,6 +368,20 @@ inline void setOfxGuiTheme(bool bMini = 0, std::string pathFont = "") {
 	or only settings position without drawing etc..
 */
 
+
+/*
+	TODO
+	create a main gui? 
+		to avoid add toggles 
+		to first/anchor added gui?
+	allow add/chain many guiManager`s
+	add solo`s
+	add keys F1-F2-F3 etc
+		bKeys
+	add ofRectangles/shape to measure text boxes too...?
+	check other ofxGui related addons
+*/
+
 //--
 
 /*
@@ -804,8 +818,11 @@ private:
 
 		//clamp
 		glm::vec2 p = guiAnchorPtr->getPosition();
-		if (p.x < 0 || p.y < 0) {
-			guiAnchorPtr->setPosition(SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS, SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS);
+		if (p.x < 0) {
+			guiAnchorPtr->setPosition(SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS, p.y);
+		}
+		if (p.y < 0) {
+			guiAnchorPtr->setPosition(p.x, SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS);
 		}
 
 		// link all panels position to anchor/main panel
