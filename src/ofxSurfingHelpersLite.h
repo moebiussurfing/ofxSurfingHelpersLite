@@ -41,6 +41,14 @@ inline string getProjectName() {
 inline void setWindowTitleAsProjectName() {
 	ofSetWindowTitle(getProjectName());
 }
+//--------------------------------------------------------------
+inline void setWindowTitleAsProjectNameWithFPS() {
+	string s = "";
+	s = getProjectName();
+	string sfps = ofToString(ofGetFrameRate(), 1);
+	s = s + " " + sfps;
+	ofSetWindowTitle(s);
+}
 
 // WARNING!
 // For my personal setup!
