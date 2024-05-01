@@ -19,6 +19,10 @@
 
 //#define SURFING__STRING_BOX___USE_TTF_INSTEAD_OF_BITMAP_FONT___WIP//TODO
 
+#define SURFING__MY_TV_WIDTH 768
+#define SURFING__MY_TV_HEIGHT 1360
+// portrait
+
 //------
 
 namespace ofxSurfing {
@@ -109,6 +113,47 @@ inline void setWindowAtMonitor(int pos = 0, bool bPortrait = false, int fps = 60
 	ofSetWindowPosition(x, y);
 	ofSetWindowShape(w, h);
 }
+
+// --------------------------------------
+inline void setWindowAtTV(int pos = 0, int TVwidth = SURFING__MY_TV_WIDTH, int TVheight = SURFING__MY_TV_HEIGHT, int fps = 60, bool vSync = false) {
+	ofSetFrameRate(fps);
+	ofSetVerticalSync(vSync);
+
+	// My PERSONAL displays setup
+	// pos monitors
+	// -1: FHD, landscape
+	//  0: FHD, landscape / main display
+	//  1: FHD, portrait
+	// My main display
+	int wMain = 1920;
+	int hMain = 1080;
+
+	//fix window bar height on WIN_32.
+	int hBar = 32;
+	int yPos = hBar; //move a bit down to move it inside the window.
+	int hOffset = hBar; //make the window height smaller.
+
+	int x, y, w, h;
+
+	x = 0;
+	y = 0;
+	y += yPos;
+
+	// Currently I have a portrait TV right to the main monitor
+	w = TVwidth;
+	h = TVheight;
+
+	h -= hOffset;
+
+	if (pos == -1)
+		x = -wMain;
+	else if (pos == 1)
+		x = wMain;
+
+	ofSetWindowPosition(x, y);
+	ofSetWindowShape(w, h);
+}
+
 
 //--------------------------------------------------------------
 inline void setWindowMaxFrameRate() {
