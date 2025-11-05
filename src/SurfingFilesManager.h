@@ -1,6 +1,16 @@
 ﻿// file: SurfingFilesManager.h
 #pragma once
 
+/*
+
+	TODO:
+
+	- allow create a new folder
+	- add option to open the folder after export
+
+*/
+
+
 #include "ofMain.h"
 
 #include "SurfingFilesManager.h"
