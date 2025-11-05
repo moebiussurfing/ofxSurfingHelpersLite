@@ -97,7 +97,8 @@ void SurfingFilesManager::doChooseFolder() {
 	ofLogNotice("SurfingFilesManager") << "doChooseFolder()";
 
 	// Determine default folder: if not set yet, use the app's data folder
-	std::string defaultFolder = pathFolder.get().empty() ? ofToDataPath("", true) : pathFolder.get();
+	//std::string defaultFolder = pathFolder.get().empty() ? ofToDataPath("", true) : pathFolder.get();
+	std::string defaultFolder = pathFolder.get().empty() ? ofToDataPath("", true) : ofToDataPath(pathFolder.get(),true);
 
 	ofFileDialogResult result = ofSystemLoadDialog("Select output folder", true, defaultFolder);
 
@@ -109,6 +110,9 @@ void SurfingFilesManager::doChooseFolder() {
 		if (folderSelectedCallback) {
 			folderSelectedCallback(pathFolder.get());
 		}
+
+		// Save
+		ofxSurfing::saveSettings(params);
 	}
 }
 
