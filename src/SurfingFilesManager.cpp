@@ -11,14 +11,6 @@ SurfingFilesManager::~SurfingFilesManager() {
 	if (!bDoneExit) exit();
 }
 
-// //--------------------------------------------------------------
-// void SurfingFilesManager::setup(bool bHideExportTrigger_) {
-// 	ofLogNotice("SurfingFilesManager") << "setup( ) bHideExportTrigger_:" << bHideExportTrigger_;
-
-// 	bHideExportTrigger = bHideExportTrigger_;
-// 	setup();
-// }
-
 //--------------------------------------------------------------
 void SurfingFilesManager::setup() {
 	ofLogNotice("SurfingFilesManager") << "setup()";
