@@ -11,13 +11,13 @@ SurfingFilesManager::~SurfingFilesManager() {
 	if (!bDoneExit) exit();
 }
 
-//--------------------------------------------------------------
-void SurfingFilesManager::setup(bool bHideExportTrigger_) {
-	ofLogNotice("SurfingFilesManager") << "setup( ) bHideExportTrigger_:" << bHideExportTrigger_;
+// //--------------------------------------------------------------
+// void SurfingFilesManager::setup(bool bHideExportTrigger_) {
+// 	ofLogNotice("SurfingFilesManager") << "setup( ) bHideExportTrigger_:" << bHideExportTrigger_;
 
-	bHideExportTrigger = bHideExportTrigger_;
-	setup();
-}
+// 	bHideExportTrigger = bHideExportTrigger_;
+// 	setup();
+// }
 
 //--------------------------------------------------------------
 void SurfingFilesManager::setup() {
@@ -27,6 +27,7 @@ void SurfingFilesManager::setup() {
 	setupCallbacks();
 
 	// Load saved settings
+	if(!bDisableInternalJsonSettings)
 	ofxSurfing::loadSettings(params);
 }
 
@@ -147,7 +148,7 @@ void SurfingFilesManager::doOpenExportFolder() {
 //--------------------------------------------------------------
 void SurfingFilesManager::exit() {
 	ofLogNotice("SurfingFilesManager") << "exit()";
-
+if(!bDisableInternalJsonSettings)
 	ofxSurfing::saveSettings(params);
 	bDoneExit = true;
 }

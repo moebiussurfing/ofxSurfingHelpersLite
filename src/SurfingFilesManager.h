@@ -22,7 +22,8 @@ public:
 	~SurfingFilesManager();
 
 	void setup();
-	void setup(bool bHideExportTrigger_); // To hide the export button trigger for cases that only need the path setling.
+	// void setup(bool bHideExportTrigger_); // To hide the export button trigger for cases that only need the path setling.
+	void setDisableExportTrigger(bool b) { bHideExportTrigger = b; }
 
 	void exit(); // Auto-save settings
 
@@ -72,8 +73,11 @@ private:
 	bool bDoneExit = false;
 	bool bHideExportTrigger = false;
 
+	bool bDisableInternalJsonSettings = false;
+	
 	std::string name = "Export";
-
-public:
+	
+	public:
+	void setDisableInternalJsonSettings(bool b) { bDisableInternalJsonSettings = b; }	
 	void setName(const std::string & name_) { name = name_; }
 };
