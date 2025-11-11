@@ -2,7 +2,7 @@
 #include "ofMain.h"
 
 #include "ofxGui.h"
-#include "ofxSurfingSerializers.h"
+#include "ofxSurfingSerializers.h" // Settings
 
 /*
 * ofxGui
