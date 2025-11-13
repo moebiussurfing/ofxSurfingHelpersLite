@@ -61,10 +61,15 @@ void SurfingFilesManager::doExport() {
 		return;
 	}
 
-	std::string folder = (pathFolder.get().empty())
-		? ofToDataPath("", true)
-		: pathFolder.get();
-
+//	std::string folder = (pathFolder.get().empty())
+//		? ofToDataPath("", true)
+//		: pathFolder.get();
+	std::string folder;
+	if (pathFolder.get().empty())
+		folder=ofToDataPath("", true);
+	else
+		folder=pathFolder.get();
+	
 	std::string savedFile = exportCallback(folder);
 
 	//--
@@ -73,7 +78,7 @@ void SurfingFilesManager::doExport() {
 		ofLogNotice("SurfingFilesManager") << "Exported to: " << savedFile;
 
 		// Auto-open the file (cross-platform)
-		std::string quotedPath = "\"" + ofFilePath::getAbsolutePath(savedFile) + "\"";
+		std::string quotedPath = ofToString("\"") + ofToString(ofFilePath::getAbsolutePath(savedFile)) + ofToString("\")");
 
 #ifdef TARGET_OSX
 		ofSystem("open " + quotedPath);
@@ -96,7 +101,7 @@ void SurfingFilesManager::doChooseFolder() {
 	ofFileDialogResult result = ofSystemLoadDialog("Select output folder", true, defaultFolder);
 
 	if (result.bSuccess) {
-		pathFolder = result.getPath();
+		pathFolder.set(result.getPath());
 		ofLogNotice("SurfingFilesManager") << "Selected folder: " << pathFolder.get();
 
 		// Notify external listener if provided
@@ -113,10 +118,15 @@ void SurfingFilesManager::doChooseFolder() {
 void SurfingFilesManager::doOpenExportFolder() {
 	ofLogNotice("SurfingFilesManager") << "doOpenExportFolder()";
 
-	std::string folderStr = (pathFolder.get().empty())
-		? ofToDataPath("", true)
-		: pathFolder.get();
-
+//	std::string folderStr = (pathFolder.get().empty())
+//		? ofToDataPath("", true)
+//		: pathFolder.get();
+	std::string folderStr;
+	if (pathFolder.get().empty())
+		folderStr=ofToDataPath("", true);
+	else
+		folderStr=pathFolder.get();
+	
 	ofFile folder(folderStr);
 	if (!folder.isDirectory()) {
 		folderStr = folder.getEnclosingDirectory();

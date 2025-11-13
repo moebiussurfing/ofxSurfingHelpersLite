@@ -168,11 +168,11 @@ inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, SURFING
 
 	if (layout == SURFING_LAYOUT_BOTTOM_CENTER) { // both bottom-center
 		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + d;
-		int gh = MAX(gui1.getShape().getHeight(), gui2.getShape().getHeight());
+		int gh = std::max(gui1.getShape().getHeight(), gui2.getShape().getHeight());
 		gh += SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS;
 		int x = ofGetWidth() / 2 - gw / 2;
 		int y = ofGetHeight() - gh;
-		y = MAX(y, 0);
+		y = std::max(y, 0);
 		gui1.setPosition(x, y);
 	}
 
@@ -180,7 +180,7 @@ inline void setGuiPositionToLayoutBoth(ofxPanel & gui1, ofxPanel & gui2, SURFING
 		int gw = gui1.getShape().getWidth() + gui2.getShape().getWidth() + d;
 		int x = ofGetWidth() / 2 - gw / 2;
 		int y = SURFING__OFXGUI__PAD_TO_WINDOW_BORDERS;
-		y = MAX(y, 0);
+		y = std::max(y, 0);
 		gui1.setPosition(x, y);
 	}
 
@@ -231,15 +231,15 @@ inline void setGuiPositionRightTo(ofxPanel & guiTarget, ofxPanel & guiAnchor, bo
 	auto bb = guiAnchor.getShape();
 	float d = float(SURFING__OFXGUI__PAD_BETWEEN_PANELS);
 	if (bDoubleSpace) d *= 2;
-	auto p = bb.getTopRight() + glm::vec2 { d, 0 };
-	guiTarget.setPosition(p);
+	auto p = bb.getTopRight() + glm::vec3{d, 0, 0};
+	guiTarget.setPosition(glm::vec3(p));
 }
 //--------------------------------------------------------------
 inline void setGuiPositionBelowTo(ofxPanel & guiTarget, ofxPanel & guiAnchor, bool bDoubleSpace = false) {
 	auto bb = guiAnchor.getShape();
 	float d = float(SURFING__OFXGUI__PAD_BETWEEN_PANELS);
 	if (bDoubleSpace) d *= 2;
-	auto p = bb.getBottomLeft() + glm::vec2 { 0, d };
+	auto p = bb.getBottomLeft() + glm::vec3 { 0, d, 0 };
 	guiTarget.setPosition(p);
 }
 
@@ -455,13 +455,13 @@ public:
 		listenerIndexAlign = indexAlign.newListener([this](int & i) {
 			switch (i) {
 			case 0:
-				nameAlign = "HORIZONTAL";
+				nameAlign.set("HORIZONTAL");
 				break;
 			case 1:
-				nameAlign = "VERTICAL";
+				nameAlign.set("VERTICAL");
 				break;
 			default:
-				nameAlign = "NONE";
+				nameAlign.set("NONE");
 				break;
 			}
 
@@ -473,13 +473,13 @@ public:
 		listenerIndexLayout = indexLayout.newListener([this](int & i) {
 			switch (i) {
 			case 0:
-				nameLayout = "A"; //bottom when horizontal
+				nameLayout.set("A"); //bottom when horizontal
 				break;
 			case 1:
-				nameLayout = "B"; //top when horizontal
+				nameLayout.set("B"); //top when horizontal
 				break;
 			default:
-				nameLayout = "NONE";
+				nameLayout.set("NONE");
 				break;
 			}
 
@@ -891,7 +891,7 @@ private:
 	void save() { //save all settings
 		ofLogNotice("SurfingOfxGuiPanelsManager") << "save()";
 
-		position = guiAnchorPtr->getPosition();
+		position.set(guiAnchorPtr->getPosition());
 
 		//get maximize states
 		for (size_t i = 0; i < bMinimizeds.size(); i++) {
