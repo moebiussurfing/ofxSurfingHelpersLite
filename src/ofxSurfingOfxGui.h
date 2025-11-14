@@ -830,8 +830,8 @@ private:
 		for (size_t i = 1; i < guis.size(); i++) {
 			if (!bGuis[i]) continue;
 
-			bool b = modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_FULL;
-			b |= modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_POSITION;
+			bool b = (modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_FULL) != 0;
+			b = b || ((modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_POSITION) != 0);
 
 			if (b) {
 				if (indexAlign == 0) //horizontal
@@ -864,8 +864,8 @@ public:
 		for (size_t i = 0; i < guis.size(); i++) {
 			if (!bGuis[i]) continue;
 
-			bool b = modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_FULL;
-			b |= modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_DRAW;
+			bool b = (modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_FULL) != 0;
+			b = b || ((modes[i] & ofxSurfing::SURFING__OFXGUI__MODE_DRAW) != 0);
 
 			if (bGuis[i] && b) guis[i]->draw();
 		}
